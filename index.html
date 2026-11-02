@@ -1,8 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>한영외고 심야 안전 귀가길 안내 웹앱</title>
   
   <!-- Tailwind CSS -->
@@ -28,7 +30,7 @@
     }
   </script>
 
-  <!-- Leaflet CSS & JS (지도 엔진) -->
+  <!-- Leaflet CSS & JS (기본 메인 지도 엔진 - CartoDB Positron 적용으로 403 오류 해결) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -39,7 +41,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <style>
-    #map {
+    .map-container {
       height: 100%;
       width: 100%;
       z-index: 1;
@@ -58,12 +60,19 @@
       border-radius: 12px;
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     }
+    .kakao-popup {
+      padding: 10px 14px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #1e293b;
+      max-width: 220px;
+    }
   </style>
 </head>
 <body class="bg-slate-900 font-sans text-slate-800 antialiased flex flex-col h-screen overflow-hidden">
 
   <!-- Header -->
-  <header class="bg-brand-950 text-white border-b border-brand-800 px-6 py-4 flex flex-wrap items-center justify-between z-10 shadow-lg">
+  <header class="bg-brand-950 text-white border-b border-brand-800 px-6 py-4 flex flex-wrap items-center justify-between z-10 shadow-lg shrink-0">
     <div class="flex items-center space-x-3">
       <div class="bg-blue-600 p-2.5 rounded-xl shadow-md">
         <i data-lucide="shield-check" class="w-6 h-6 text-white"></i>
@@ -73,7 +82,7 @@
           한영외고 심야 안전 귀가길
           <span class="text-xs font-normal bg-blue-900/80 text-blue-200 px-2.5 py-0.5 rounded-full border border-blue-700">야간자율학습(22시~01시)</span>
         </h1>
-        <p class="text-xs text-slate-400">가로등·CCTV 밀도 기반 실시간 길안내</p>
+        <p class="text-xs text-slate-400">가로등·CCTV 밀도 기반 실시간 길안내 및 서울시 지도 연동</p>
       </div>
     </div>
     
@@ -85,7 +94,7 @@
       </div>
       <div class="flex items-center gap-1.5 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
         <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
-        <span>서울시 지도 표시 <b>정상 준수</b> (CartoDB 403 차단방지)</span>
+        <span>지도 인증키 <b>적용 완료</b></span>
       </div>
     </div>
   </header>
@@ -94,18 +103,21 @@
   <div class="flex flex-1 relative overflow-hidden">
     
     <!-- Sidebar Control Panel -->
-    <aside class="w-full md:w-96 bg-white border-r border-slate-200 flex flex-col h-full z-20 shadow-xl overflow-hidden">
+    <aside class="w-full md:w-96 bg-white border-r border-slate-200 flex flex-col h-full z-20 shadow-xl overflow-hidden shrink-0">
       
       <!-- Tab Navigation -->
-      <div class="flex border-b border-slate-200 bg-slate-50">
-        <button id="tab-route-btn" onclick="switchTab('route')" class="flex-1 py-3 px-2 text-xs font-semibold border-b-2 border-blue-600 text-blue-600 flex items-center justify-center gap-1.5 transition">
-          <i data-lucide="navigation" class="w-4 h-4"></i> (1) 귀가 경로 탐색
+      <div class="flex border-b border-slate-200 bg-slate-50 shrink-0">
+        <button id="tab-route-btn" onclick="switchTab('route')" class="flex-1 py-3 px-2 text-xs font-semibold border-b-2 border-blue-600 text-blue-600 flex items-center justify-center gap-1 transition">
+          <i data-lucide="navigation" class="w-3.5 h-3.5"></i> (1) 귀가 경로
         </button>
-        <button id="tab-search-btn" onclick="switchTab('search')" class="flex-1 py-3 px-2 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1.5 transition">
-          <i data-lucide="search" class="w-4 h-4"></i> (2) 특정 위치 탐색
+        <button id="tab-search-btn" onclick="switchTab('search')" class="flex-1 py-3 px-2 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1 transition">
+          <i data-lucide="search" class="w-3.5 h-3.5"></i> (2) 위치 탐색
         </button>
-        <button id="tab-data-btn" onclick="switchTab('data')" class="flex-1 py-3 px-2 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1.5 transition">
-          <i data-lucide="database" class="w-4 h-4"></i> (3) 데이터 연동
+        <button id="tab-kakao-btn" onclick="switchTab('kakao')" class="flex-1 py-3 px-2 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1 transition">
+          <i data-lucide="map" class="w-3.5 h-3.5"></i> (3) 카카오맵
+        </button>
+        <button id="tab-data-btn" onclick="switchTab('data')" class="flex-1 py-3 px-2 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1 transition">
+          <i data-lucide="database" class="w-3.5 h-3.5"></i> (4) 데이터 연동
         </button>
       </div>
 
@@ -253,10 +265,32 @@
           </div>
         </div>
 
-        <!-- Tab 3: Data Integration -->
+        <!-- Tab 3: Kakao Map View Status & Info -->
+        <div id="tab-kakao" class="space-y-4 hidden">
+          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 space-y-1.5">
+            <div class="flex items-center gap-1.5 font-bold">
+              <i data-lucide="map-pin" class="w-4 h-4 text-amber-600"></i> 카카오 지도 연결 상태
+            </div>
+            <p id="kakao-status" class="text-[11px] text-amber-800">카카오 지도 SDK 상태를 확인하는 중입니다...</p>
+          </div>
+
+          <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50 space-y-2 text-xs">
+            <h4 class="font-bold text-slate-800 flex items-center gap-1">
+              <i data-lucide="check-square" class="w-4 h-4 text-blue-600"></i> 가상 지점 목록 (연습용)
+            </h4>
+            <ul class="space-y-1.5 text-slate-600 text-[11px] list-disc pl-4">
+              <li><b>가상 지점 A</b>: 37.5651, 126.9821</li>
+              <li><b>가상 지점 B</b>: 37.5670, 126.9850</li>
+              <li><b>가상 지점 C</b>: 37.5629, 126.9843</li>
+            </ul>
+            <p class="text-[10px] text-slate-400 border-t pt-2">※ 마커 클릭 시 '가상 연습 위치·실제 자료 아님' 설명이 표시되며 팀 실데이터와 분리되어 관리됩니다.</p>
+          </div>
+        </div>
+
+        <!-- Tab 4: Data Integration -->
         <div id="tab-data" class="space-y-4 hidden">
-          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 flex gap-2">
-            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+          <div class="bg-blue-50 border border-blue-200 rounded-xl p-3.5 text-xs text-blue-900 flex gap-2">
+            <i data-lucide="info" class="w-4 h-4 text-blue-600 shrink-0 mt-0.5"></i>
             <span>공공데이터포털에서 직접 받으신 최신 CSV 파일을 로드하여 실제 실시간 데이터로 교체하실 수 있습니다.</span>
           </div>
 
@@ -288,10 +322,10 @@
         <ul class="space-y-1 list-disc pl-3 text-[10px]">
           <li>가로등: 서울특별시_가로등 위치 정보 (2022.11 기준)</li>
           <li>CCTV: 전국CCTV표준데이터 (2026 기준)</li>
-          <li>지도: CartoDB Positron (OSM 기반 403 차단 회피)</li>
+          <li>지도: CartoDB Positron & 카카오 지도 SDK</li>
         </ul>
         <div class="pt-2 border-t border-slate-200 text-[10px] text-slate-400 flex justify-between">
-          <span>🔒 API 키 / 개인정보 미저장 원칙</span>
+          <span>🔒 API 키 적용됨 / 개인정보 미저장</span>
           <span>한영외고 전용</span>
         </div>
       </footer>
@@ -299,11 +333,18 @@
     </aside>
 
     <!-- Map View Area -->
-    <main class="flex-1 relative bg-slate-200">
-      <div id="map"></div>
+    <main class="flex-1 relative bg-slate-200 h-full overflow-hidden">
+      
+      <!-- Leaflet Map View (기본 메인 실데이터 지도) -->
+      <div id="map" class="map-container"></div>
+
+      <!-- Kakao Map View (카카오 지도 탭 선택시 표출) -->
+      <div id="kakao-map-container" class="map-container hidden">
+        <div id="kakao-map" class="w-full h-full"></div>
+      </div>
 
       <!-- Map Legend Overlay -->
-      <div class="absolute bottom-6 right-6 bg-white/95 backdrop-blur-md border border-slate-200 p-3.5 rounded-2xl shadow-xl z-20 text-xs space-y-2 w-48">
+      <div id="map-legend" class="absolute bottom-6 right-6 bg-white/95 backdrop-blur-md border border-slate-200 p-3.5 rounded-2xl shadow-xl z-20 text-xs space-y-2 w-48">
         <h5 class="font-bold text-slate-800 text-[11px] uppercase tracking-wider mb-1 border-b pb-1">지도 범례</h5>
         <div class="flex items-center gap-2">
           <span class="w-3 h-3 rounded-full bg-blue-600 inline-block shadow-sm"></span>
@@ -466,9 +507,88 @@
     // Initial Marker Render
     renderMarkers(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1], 800);
 
+    // 3. Kakao Map Integration Setup
+    YOUR_JAVASCRIPT_KEY = '215f413e616fa03fbeb581622e3e7587';
+    let kakaoMapObj = null;
+
+    const demoPoints = [
+      { name: '가상 지점 A', lat: 37.5651, lng: 126.9821 },
+      { name: '가상 지점 B', lat: 37.5670, lng: 126.9850 },
+      { name: '가상 지점 C', lat: 37.5629, lng: 126.9843 }
+    ];
+
+    function setKakaoStatus(msg) {
+      const el = document.getElementById('kakao-status');
+      if (el) el.textContent = msg;
+    }
+
+    // Load Kakao Map SDK dynamically
+    function initKakaoMapSDK() {
+      if (!/^https?:$/.test(location.protocol)) {
+        setKakaoStatus('이 예제는 웹 서버에서 실행하도록 구성되었습니다. Live Server나 등록한 HTTP(S) 주소에서 열어주세요.');
+        return;
+      }
+
+      if (!javascriptKey || javascriptKey === 'YOUR_JAVASCRIPT_KEY') {
+        setKakaoStatus('JavaScript 인증키가 설정되지 않았습니다.');
+        return;
+      }
+
+      const sdk = document.createElement('script');
+      sdk.async = true;
+      sdk.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + encodeURIComponent(javascriptKey.trim()) + '&autoload=false';
+      
+      sdk.onerror = function() {
+        setKakaoStatus('카카오맵 SDK를 불러오지 못했습니다. 키 및 플랫폼 도메인 설정을 확인하세요.');
+      };
+
+      sdk.onload = function() {
+        if (!window.kakao || !window.kakao.maps || typeof window.kakao.maps.load !== 'function') {
+          setKakaoStatus('카카오 로더 초기화 실패');
+          return;
+        }
+        
+        window.kakao.maps.load(function() {
+          try {
+            const container = document.getElementById('kakao-map');
+            kakaoMapObj = new kakao.maps.Map(container, {
+              center: new kakao.maps.LatLng(demoPoints[0].lat, demoPoints[0].lng),
+              level: 4
+            });
+
+            demoPoints.forEach(pt => {
+              const marker = new kakao.maps.Marker({
+                map: kakaoMapObj,
+                position: new kakao.maps.LatLng(pt.lat, pt.lng),
+                title: pt.name + ' · 가상 연습 위치·실제 자료 아님'
+              });
+
+              const content = document.createElement('div');
+              content.className = 'kakao-popup';
+              content.innerHTML = `<b>${pt.name}</b><br><span style="color:#64748b; font-size:11px;">가상 연습 위치·실제 자료 아님</span>`;
+
+              const infowindow = new kakao.maps.InfoWindow({ content: content, removable: true });
+              kakao.maps.event.addListener(marker, 'click', function() {
+                infowindow.open(kakaoMapObj, marker);
+              });
+            });
+
+            setKakaoStatus('카카오 지도 객체 및 가상 지점 마커 3개가 정상적으로 준비되었습니다.');
+          } catch(e) {
+            setKakaoStatus('카카오 지도 초기화 중 오류가 발생했습니다.');
+          }
+        });
+      };
+
+      document.head.append(sdk);
+    }
+
+    // Trigger SDK Load
+    initKakaoMapSDK();
+
     // Tab Switching Function
     function switchTab(tabName) {
-      ['route', 'search', 'data'].forEach(t => {
+      ['route', 'search', 'kakao', 'data'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.add('hidden');
         document.getElementById(`tab-${t}-btn`).classList.remove('border-blue-600', 'text-blue-600');
         document.getElementById(`tab-${t}-btn`).classList.add('border-transparent', 'text-slate-500');
@@ -477,6 +597,29 @@
       document.getElementById(`tab-${tabName}`).classList.remove('hidden');
       document.getElementById(`tab-${tabName}-btn`).classList.add('border-blue-600', 'text-blue-600');
       document.getElementById(`tab-${tabName}-btn`).classList.remove('border-transparent', 'text-slate-500');
+
+      // Toggle Map Containers
+      const leafletMapEl = document.getElementById('map');
+      const kakaoMapContainer = document.getElementById('kakao-map-container');
+      const legendEl = document.getElementById('map-legend');
+
+      if (tabName === 'kakao') {
+        leafletMapEl.classList.add('hidden');
+        kakaoMapContainer.classList.remove('hidden');
+        legendEl.classList.add('hidden');
+
+        if (kakaoMapObj) {
+          setTimeout(() => {
+            kakaoMapObj.relayout();
+            kakaoMapObj.setCenter(new kakao.maps.LatLng(demoPoints[0].lat, demoPoints[0].lng));
+          }, 100);
+        }
+      } else {
+        leafletMapEl.classList.remove('hidden');
+        kakaoMapContainer.classList.add('hidden');
+        legendEl.classList.remove('hidden');
+        map.invalidateSize();
+      }
     }
 
     // Preset Destinations
