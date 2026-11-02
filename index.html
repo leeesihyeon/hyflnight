@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -30,7 +29,7 @@
     }
   </script>
 
-  <!-- Leaflet CSS & JS (기본 메인 지도 엔진 - CartoDB Positron 적용으로 403 오류 해결) -->
+  <!-- Leaflet CSS & JS (CartoDB Positron 적용으로 403 오류 해결) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -390,10 +389,25 @@
 
   <!-- JavaScript Logic -->
   <script>
+    // 1. 카카오 키 및 변수를 가장 최상단에 먼저 선언 (ReferenceError 방지)
+    const javascriptKey = '215f413e616fa03fbeb581622e3e7587';
+    let kakaoMapObj = null;
+
+    const demoPoints = [
+      { name: '가상 지점 A', lat: 37.5651, lng: 126.9821 },
+      { name: '가상 지점 B', lat: 37.5670, lng: 126.9850 },
+      { name: '가상 지점 C', lat: 37.5629, lng: 126.9843 }
+    ];
+
+    function setKakaoStatus(msg) {
+      const el = document.getElementById('kakao-status');
+      if (el) el.textContent = msg;
+    }
+
     // Lucide Icons Render
     lucide.createIcons();
 
-    // 1. 서울시 행정 경계 Bounds (위도 37.42 ~ 37.70, 경도 126.76 ~ 127.18)
+    // 서울시 행정 경계 Bounds
     const SEOUL_BOUNDS = {
       minLat: 37.42,
       maxLat: 37.70,
@@ -406,29 +420,26 @@
              lng >= SEOUL_BOUNDS.minLng && lng <= SEOUL_BOUNDS.maxLng;
     }
 
-    // 2. Leaflet Map Initialization using CartoDB Positron (403 Error Free Layer)
-    const HANYOUNG_COORDS = [37.5484, 127.1574]; // 한영외고 좌표
+    // Leaflet Map Initialization
+    const HANYOUNG_COORDS = [37.5484, 127.1574];
     const map = L.map('map', {
       center: HANYOUNG_COORDS,
       zoom: 15,
       zoomControl: false
     });
 
-    // CartoDB Positron Tile Layer (No 403 Forbidden Error)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
       subdomains: 'abcd',
       maxZoom: 19
     }).addTo(map);
 
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // Layer Groups for Dynamic Markers
     const cctvLayerGroup = L.layerGroup().addTo(map);
     const lampLayerGroup = L.layerGroup().addTo(map);
     const routeLayerGroup = L.layerGroup().addTo(map);
 
-    // Hanyoung FLHS Marker
     const schoolIcon = L.divIcon({
       html: `<div class="bg-blue-600 text-white p-2 rounded-full shadow-lg border-2 border-white flex items-center justify-center"><i data-lucide="school" class="w-5 h-5"></i></div>`,
       className: '',
@@ -437,7 +448,6 @@
     });
     L.marker(HANYOUNG_COORDS, { icon: schoolIcon }).addTo(map).bindPopup("<b>한영외국어고등학교</b><br>야간자율학습 하교 장소");
 
-    // Sample Datasets Extracted from User Files (Gangdong-gu Hanyoung Surroundings)
     let cctvData = [
       [37.5489, 127.1565], [37.5492, 127.1580], [37.5501, 127.1570], [37.5478, 127.1560],
       [37.5485, 127.1592], [37.5512, 127.1558], [37.5520, 127.1542], [37.5535, 127.1538],
@@ -451,7 +461,6 @@
       [37.5545, 127.1528], [37.5552, 127.1545], [37.5463, 127.1582], [37.5455, 127.1605]
     ];
 
-    // Distance Calculation (Haversine Formula)
     function getDistanceInMeters(lat1, lon1, lat2, lon2) {
       const R = 6371000;
       const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -463,7 +472,6 @@
       return R * c;
     }
 
-    // Render Markers on Map
     function renderMarkers(centerLat, centerLng, radius = 500) {
       cctvLayerGroup.clearLayers();
       lampLayerGroup.clearLayers();
@@ -481,7 +489,7 @@
             weight: 1.5,
             opacity: 1,
             fillOpacity: 0.8
-          }).addTo(cctvLayerGroup).bindPopup("<b>CCTV (방범용)</b><br>서울특별시 관리대수");
+          }).addTo(cctvLayerGroup).bindPopup("<b>CCTV (방범용)</b>");
           visibleCCTV++;
         }
       });
@@ -496,7 +504,7 @@
             weight: 1,
             opacity: 1,
             fillOpacity: 0.8
-          }).addTo(lampLayerGroup).bindPopup("<b>가로등</b><br>2022년 설치 데이터");
+          }).addTo(lampLayerGroup).bindPopup("<b>가로등</b>");
           visibleLamp++;
         }
       });
@@ -504,28 +512,12 @@
       return { visibleCCTV, visibleLamp };
     }
 
-    // Initial Marker Render
     renderMarkers(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1], 800);
 
-    // 3. Kakao Map Integration Setup
-    YOUR_JAVASCRIPT_KEY = '215f413e616fa03fbeb581622e3e7587';
-    let kakaoMapObj = null;
-
-    const demoPoints = [
-      { name: '가상 지점 A', lat: 37.5651, lng: 126.9821 },
-      { name: '가상 지점 B', lat: 37.5670, lng: 126.9850 },
-      { name: '가상 지점 C', lat: 37.5629, lng: 126.9843 }
-    ];
-
-    function setKakaoStatus(msg) {
-      const el = document.getElementById('kakao-status');
-      if (el) el.textContent = msg;
-    }
-
-    // Load Kakao Map SDK dynamically
+    // Kakao Map SDK Dynamic Load
     function initKakaoMapSDK() {
       if (!/^https?:$/.test(location.protocol)) {
-        setKakaoStatus('이 예제는 웹 서버에서 실행하도록 구성되었습니다. Live Server나 등록한 HTTP(S) 주소에서 열어주세요.');
+        setKakaoStatus('웹 서버(HTTPS) 환경에서 실행해야 합니다.');
         return;
       }
 
@@ -539,7 +531,7 @@
       sdk.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + encodeURIComponent(javascriptKey.trim()) + '&autoload=false';
       
       sdk.onerror = function() {
-        setKakaoStatus('카카오맵 SDK를 불러오지 못했습니다. 키 및 플랫폼 도메인 설정을 확인하세요.');
+        setKakaoStatus('카카오맵 SDK 로드 실패! 웹 플랫폼 도메인 등록을 확인하세요.');
       };
 
       sdk.onload = function() {
@@ -560,7 +552,7 @@
               const marker = new kakao.maps.Marker({
                 map: kakaoMapObj,
                 position: new kakao.maps.LatLng(pt.lat, pt.lng),
-                title: pt.name + ' · 가상 연습 위치·실제 자료 아님'
+                title: pt.name + ' · 가상 연습 위치'
               });
 
               const content = document.createElement('div');
@@ -573,7 +565,7 @@
               });
             });
 
-            setKakaoStatus('카카오 지도 객체 및 가상 지점 마커 3개가 정상적으로 준비되었습니다.');
+            setKakaoStatus('카카오 지도 및 가상 지점 마커 준비 완료!');
           } catch(e) {
             setKakaoStatus('카카오 지도 초기화 중 오류가 발생했습니다.');
           }
@@ -583,10 +575,9 @@
       document.head.append(sdk);
     }
 
-    // Trigger SDK Load
+    // SDK 실행
     initKakaoMapSDK();
 
-    // Tab Switching Function
     function switchTab(tabName) {
       ['route', 'search', 'kakao', 'data'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.add('hidden');
@@ -598,7 +589,6 @@
       document.getElementById(`tab-${tabName}-btn`).classList.add('border-blue-600', 'text-blue-600');
       document.getElementById(`tab-${tabName}-btn`).classList.remove('border-transparent', 'text-slate-500');
 
-      // Toggle Map Containers
       const leafletMapEl = document.getElementById('map');
       const kakaoMapContainer = document.getElementById('kakao-map-container');
       const legendEl = document.getElementById('map-legend');
@@ -622,7 +612,6 @@
       }
     }
 
-    // Preset Destinations
     const DESTINATIONS = {
       godeok: { name: "고덕역 4번 출구", coords: [37.5550, 127.1540], inSeoul: true },
       myeongil: { name: "명일동 아파트 단지 사거리", coords: [37.5510, 127.1440], inSeoul: true },
@@ -631,12 +620,10 @@
       out_of_seoul: { name: "경기도 수원시", coords: [37.2636, 127.0286], inSeoul: false }
     };
 
-    // Calculate Route & Show Results
     function calculateRoute() {
       const selectedKey = document.getElementById('route-end').value;
       const target = DESTINATIONS[selectedKey];
 
-      // Check Seoul Boundary
       if (!target.inSeoul || !isInsideSeoul(target.coords[0], target.coords[1])) {
         showModal();
         return;
@@ -644,7 +631,6 @@
 
       routeLayerGroup.clearLayers();
 
-      // Waypoints for Safe Route vs Shortest Route
       const safeWaypoints = [
         HANYOUNG_COORDS,
         [HANYOUNG_COORDS[0] + 0.002, HANYOUNG_COORDS[1] - 0.001],
@@ -656,16 +642,13 @@
         target.coords
       ];
 
-      // Draw Polyline
       const safePolyline = L.polyline(safeWaypoints, { color: '#10b981', weight: 6, opacity: 0.9 }).addTo(routeLayerGroup);
       const shortPolyline = L.polyline(shortWaypoints, { color: '#94a3b8', weight: 4, dashArray: '6, 8', opacity: 0.8 }).addTo(routeLayerGroup);
 
-      // Destination Marker
       L.marker(target.coords).addTo(routeLayerGroup).bindPopup(`<b>${target.name}</b>`).openPopup();
 
       map.fitBounds(safePolyline.getBounds(), { padding: [40, 40] });
 
-      // Real Data Distance & Density Calculation
       const safeDist = Math.round(getDistanceInMeters(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1], target.coords[0], target.coords[1]) * 1.15);
       const shortDist = Math.round(getDistanceInMeters(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1], target.coords[0], target.coords[1]));
 
@@ -677,11 +660,9 @@
       const shortCCTV = Math.max(3, Math.round(safeCCTV * 0.4));
       const shortLamp = Math.max(2, Math.round(safeLamp * 0.35));
 
-      // Calculate Safety Score
       const safeScoreCalc = Math.min(98, Math.round((safeCCTV * 15 + safeLamp * 8) / (safeDist / 1000)));
       const shortScoreCalc = Math.min(75, Math.round((shortCCTV * 15 + shortLamp * 8) / (shortDist / 1000)));
 
-      // Update UI Text
       document.getElementById('safe-score').innerText = safeScoreCalc + '점';
       document.getElementById('safe-dist').innerText = safeDist + 'm';
       document.getElementById('safe-cctv').innerText = safeCCTV + '대';
@@ -695,7 +676,6 @@
       document.getElementById('route-result-container').classList.remove('hidden');
     }
 
-    // Location Search Logic
     function searchLocation() {
       const query = document.getElementById('search-input').value.trim();
       
@@ -704,13 +684,11 @@
         return;
       }
 
-      // Outside Seoul Keyword Check
       if (query.includes("수원") || query.includes("부산") || query.includes("인천") || query.includes("성남") || query.includes("하남")) {
         showModal();
         return;
       }
 
-      // Simulated Location Coordinate Lookup inside Gangdong/Seoul
       const searchLat = 37.5510 + (Math.random() - 0.5) * 0.01;
       const searchLng = 127.1440 + (Math.random() - 0.5) * 0.01;
 
@@ -735,7 +713,6 @@
       document.getElementById('search-result-container').classList.remove('hidden');
     }
 
-    // Parse Uploaded CSV Files using PapaParse
     function parseCSVFiles() {
       const lampFile = document.getElementById('lamp-csv').files[0];
       const cctvFile = document.getElementById('cctv-csv').files[0];
@@ -781,7 +758,6 @@
       }
     }
 
-    // Modal Control
     function showModal() {
       document.getElementById('out-of-seoul-modal').classList.remove('hidden');
     }
