@@ -362,6 +362,7 @@
     // 카카오지도 상 레이어 배열들
     let kakaoMarkers = [];
     let kakaoPolylines = [];
+    let kakaoPlaces = null;
 
     // 서울시 행정 경계 Bounds
     const SEOUL_BOUNDS = {
@@ -409,54 +410,77 @@
       return R * c;
     }
 
-    // 기존 카카오 마커 및 폴리라인 초기화
+    // 지도 레이어를 종류별로 관리해 경로와 시설 마커가 서로 지워지지 않게 한다.
     function clearKakaoLayers() {
-      kakaoMarkers.forEach(m => m.setMap(null));
-      kakaoPolylines.forEach(p => p.setMap(null));
+      kakaoMarkers.forEach(marker => marker.setMap(null));
+      kakaoPolylines.forEach(line => line.setMap(null));
       kakaoMarkers = [];
       kakaoPolylines = [];
     }
 
-    // 카카오 지도 상에 가로등 및 CCTV 마커 표출
-    function renderKakaoMarkers(centerLat, centerLng, radius = 500) {
-      clearKakaoLayers();
+    // 위경도 좌표와 선분 사이의 거리를 미터 단위로 계산한다.
+    function distanceToSegmentMeters(point, start, end) {
+      const latScale = 111320;
+      const lngScale = 111320 * Math.cos(point[0] * Math.PI / 180);
+      const px = (point[1] - start[1]) * lngScale;
+      const py = (point[0] - start[0]) * latScale;
+      const ex = (end[1] - start[1]) * lngScale;
+      const ey = (end[0] - start[0]) * latScale;
+      const lengthSquared = ex * ex + ey * ey;
+      const t = lengthSquared ? Math.max(0, Math.min(1, (px * ex + py * ey) / lengthSquared)) : 0;
+      return Math.hypot(px - t * ex, py - t * ey);
+    }
+
+    // CCTV와 가로등을 같은 카카오 지도 위에 표시한다.
+    // routePath가 전달되면 경로 주변, 아니면 검색 지점 주변의 시설만 표시한다.
+    function renderKakaoMarkers(centerLat, centerLng, radius = 500, routePath = null) {
+      kakaoMarkers.forEach(marker => marker.setMap(null));
+      kakaoMarkers = [];
 
       let visibleCCTV = 0;
       let visibleLamp = 0;
 
-      // 한영외고 본교 마커
-      const schoolPos = new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]);
       const schoolMarker = new kakao.maps.Marker({
-        position: schoolPos,
+        position: new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]),
         map: kakaoMapObj,
-        title: '한영외국어고등학교'
+        title: '한영외국어고등학교',
+        zIndex: 5
       });
       kakaoMarkers.push(schoolMarker);
 
-      // CCTV 마커 (파란색 다원 마커)
+      const addFacility = (pt, title, color) => {
+        const content = '<div style="width:13px;height:13px;border:2px solid #fff;border-radius:50%;background:' + color + ';box-shadow:0 1px 5px rgba(15,23,42,.55)" title="' + title + '"></div>';
+        const overlay = new kakao.maps.CustomOverlay({
+          position: new kakao.maps.LatLng(pt[0], pt[1]),
+          content: content,
+          yAnchor: 0.5,
+          zIndex: 4
+        });
+        overlay.setMap(kakaoMapObj);
+        kakaoMarkers.push(overlay);
+      };
+
+      const isNear = pt => {
+        if (!routePath || routePath.length < 2) {
+          return getDistanceInMeters(centerLat, centerLng, pt[0], pt[1]) <= radius;
+        }
+        let nearest = Infinity;
+        for (let i = 0; i < routePath.length - 1; i++) {
+          nearest = Math.min(nearest, distanceToSegmentMeters(pt, routePath[i], routePath[i + 1]));
+        }
+        return nearest <= radius;
+      };
+
       cctvData.forEach(pt => {
-        const dist = getDistanceInMeters(centerLat, centerLng, pt[0], pt[1]);
-        if (dist <= radius) {
-          const marker = new kakao.maps.Marker({
-            position: new kakao.maps.LatLng(pt[0], pt[1]),
-            map: kakaoMapObj,
-            title: 'CCTV (방범용)'
-          });
-          kakaoMarkers.push(marker);
+        if (isNear(pt)) {
+          addFacility(pt, 'CCTV (방범용)', '#2563eb');
           visibleCCTV++;
         }
       });
 
-      // 가로등 마커
       lampData.forEach(pt => {
-        const dist = getDistanceInMeters(centerLat, centerLng, pt[0], pt[1]);
-        if (dist <= radius) {
-          const marker = new kakao.maps.Marker({
-            position: new kakao.maps.LatLng(pt[0], pt[1]),
-            map: kakaoMapObj,
-            title: '가로등'
-          });
-          kakaoMarkers.push(marker);
+        if (isNear(pt)) {
+          addFacility(pt, '가로등', '#f59e0b');
           visibleLamp++;
         }
       });
@@ -478,7 +502,7 @@
 
       const sdk = document.createElement('script');
       sdk.async = true;
-      sdk.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + encodeURIComponent(javascriptKey.trim()) + '&autoload=false';
+      sdk.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + encodeURIComponent(javascriptKey.trim()) + '&autoload=false&libraries=services';
       
       sdk.onerror = function() {
         setKakaoStatus('카카오맵 SDK 로드 실패! Web 플랫폼 도메인 등록을 확인하세요.');
@@ -498,6 +522,7 @@
               level: 4
             });
 
+            kakaoPlaces = new kakao.maps.services.Places();
             renderKakaoMarkers(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1], 800);
             setKakaoStatus('카카오 지도 준비 완료! (한영외고 중심)');
           } catch(e) {
@@ -549,14 +574,18 @@
 
       if (!kakaoMapObj) return;
 
-      const counts = renderKakaoMarkers(target.coords[0], target.coords[1], 600);
+      clearKakaoLayers();
+
+      // 경로와 시설을 하나의 지도에 함께 그린다.
+      const safeCoords = [
+        HANYOUNG_COORDS,
+        [HANYOUNG_COORDS[0] + 0.002, HANYOUNG_COORDS[1] - 0.001],
+        target.coords
+      ];
+      const counts = renderKakaoMarkers(target.coords[0], target.coords[1], 120, safeCoords);
 
       // 최적 안전 경로 좌표 (녹색 실선)
-      const safePath = [
-        new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]),
-        new kakao.maps.LatLng(HANYOUNG_COORDS[0] + 0.002, HANYOUNG_COORDS[1] - 0.001),
-        new kakao.maps.LatLng(target.coords[0], target.coords[1])
-      ];
+      const safePath = safeCoords.map(pt => new kakao.maps.LatLng(pt[0], pt[1]));
 
       // 최단 거리 경로 좌표 (점선)
       const shortPath = [
@@ -638,32 +667,56 @@
         return;
       }
 
-      const searchLat = 37.5510 + (Math.random() - 0.5) * 0.01;
-      const searchLng = 127.1440 + (Math.random() - 0.5) * 0.01;
+      if (!kakaoMapObj || !kakaoPlaces) {
+        setKakaoStatus('카카오 지도 검색 기능을 불러오는 중입니다.');
+        return;
+      }
 
-      if (kakaoMapObj) {
+      setKakaoStatus('장소 검색 중...');
+      kakaoPlaces.keywordSearch(query, function(data, status) {
+        if (status !== kakao.maps.services.Status.OK || !data.length) {
+          setKakaoStatus('검색 결과가 없습니다. 장소 이름을 다시 확인해 주세요.');
+          alert('장소를 찾지 못했습니다. 서울시 내 장소명이나 역 이름으로 검색해 주세요.');
+          return;
+        }
+
+        const place = data[0];
+        const searchLat = Number(place.y);
+        const searchLng = Number(place.x);
+        if (!isInsideSeoul(searchLat, searchLng)) {
+          showModal();
+          return;
+        }
+
+        clearKakaoLayers();
         kakaoMapObj.setCenter(new kakao.maps.LatLng(searchLat, searchLng));
         kakaoMapObj.setLevel(3);
-      }
 
-      const counts = renderKakaoMarkers(searchLat, searchLng, 300);
+        const counts = renderKakaoMarkers(searchLat, searchLng, 300);
+        const placeMarker = new kakao.maps.Marker({
+          position: new kakao.maps.LatLng(searchLat, searchLng),
+          map: kakaoMapObj,
+          title: place.place_name,
+          zIndex: 6
+        });
+        kakaoMarkers.push(placeMarker);
 
-      document.getElementById('search-place-name').innerText = `'${query}' 인근 주변`;
-      document.getElementById('search-lamp-count').innerText = counts.visibleLamp;
-      document.getElementById('search-cctv-count').innerText = counts.visibleCCTV;
+        document.getElementById('search-place-name').innerText = "'" + place.place_name + "' 인근 주변";
+        document.getElementById('search-lamp-count').innerText = counts.visibleLamp;
+        document.getElementById('search-cctv-count').innerText = counts.visibleCCTV;
 
-      const totalCount = counts.visibleLamp + counts.visibleCCTV;
-      const safetyBox = document.getElementById('search-safety-level');
-
-      if (totalCount >= 10) {
-        safetyBox.className = "text-xs text-emerald-800 bg-emerald-50 p-2.5 rounded-lg border border-emerald-200 font-medium";
-        safetyBox.innerText = "✅ 카카오 지도 상 가로등 및 CCTV 밀도가 높습니다.";
-      } else {
-        safetyBox.className = "text-xs text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200 font-medium";
-        safetyBox.innerText = "⚠️ 조명 또는 CCTV 밀도가 낮아 조심히 이동하세요.";
-      }
-
-      document.getElementById('search-result-container').classList.remove('hidden');
+        const totalCount = counts.visibleLamp + counts.visibleCCTV;
+        const safetyBox = document.getElementById('search-safety-level');
+        if (totalCount >= 10) {
+          safetyBox.className = "text-xs text-emerald-800 bg-emerald-50 p-2.5 rounded-lg border border-emerald-200 font-medium";
+          safetyBox.innerText = "검색 지점 반경 300m 내 가로등 및 CCTV 데이터가 표시됩니다.";
+        } else {
+          safetyBox.className = "text-xs text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200 font-medium";
+          safetyBox.innerText = "검색 지점 반경 300m 내 시설 데이터가 적게 확인됩니다.";
+        }
+        document.getElementById('search-result-container').classList.remove('hidden');
+        setKakaoStatus('검색 지점과 주변 안전시설을 지도에 표시했습니다.');
+      });
     }
 
     function parseCSVFiles() {
@@ -708,6 +761,7 @@
       function checkFinished() {
         alert(`CSV 데이터 반영 완료! (가로등: ${lampData.length}개, CCTV: ${cctvData.length}대)`);
         if (kakaoMapObj) {
+          clearKakaoLayers();
           renderKakaoMarkers(kakaoMapObj.getCenter().getLat(), kakaoMapObj.getCenter().getLng(), 1000);
         }
       }
