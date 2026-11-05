@@ -669,20 +669,53 @@
       const value = Number(String(row[partial[0]] ?? '').replace(/,/g, '').trim());
       return Number.isFinite(value) ? value : null;
     }
-    function parseOneCSV(file, kind) {
-      return new Promise(resolve => Papa.parse(file, {
-        header: true, skipEmptyLines: true, dynamicTyping: false,
-        complete: results => {
-          const points = [];
-          results.data.forEach(row => {
-            const lat = findCoordinate(row, 'lat');
-            const lng = findCoordinate(row, 'lng');
-            if (lat !== null && lng !== null && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 && !(lat === 0 && lng === 0)) points.push([lat, lng]);
-          });
-          resolve({ points, headers: results.meta.fields || [], errors: results.errors || [] });
-        },
-        error: () => resolve({ points: [], headers: [], errors: ['CSV 읽기 실패'] })
-      }));
+    // UTF-8 CSV를 먼저 읽고, 한글 헤더가 깨지거나 좌표 열을 찾지 못하면
+    // 공공데이터에서 흔히 사용하는 CP949(EUC-KR 계열)로 다시 디코딩한다.
+    async function decodeCSVFile(file) {
+      const buffer = await file.arrayBuffer();
+      const utf8Text = new TextDecoder('utf-8').decode(buffer);
+      const parseText = text => Papa.parse(text, {
+        header: true, skipEmptyLines: true, dynamicTyping: false
+      });
+      const utf8Results = parseText(utf8Text);
+      const hasCoordinateHeaders = (utf8Results.meta.fields || []).some(header => {
+        const normalized = normalizeHeader(header);
+        return ['위도', 'wgs84위도', 'latitude', 'lat', 'y좌표', 'y',
+                '경도', 'wgs84경도', 'longitude', 'lng', 'lon', 'x좌표', 'x']
+          .some(alias => normalized.includes(normalizeHeader(alias)));
+      });
+      if (hasCoordinateHeaders) return utf8Results;
+
+      try {
+        const cp949Text = new TextDecoder('euc-kr').decode(buffer);
+        const cp949Results = parseText(cp949Text);
+        const cp949HasCoordinates = (cp949Results.meta.fields || []).some(header => {
+          const normalized = normalizeHeader(header);
+          return ['위도', 'wgs84위도', 'latitude', 'lat', 'y좌표', 'y',
+                  '경도', 'wgs84경도', 'longitude', 'lng', 'lon', 'x좌표', 'x']
+            .some(alias => normalized.includes(normalizeHeader(alias)));
+        });
+        if (cp949HasCoordinates) return cp949Results;
+      } catch (error) {
+        console.warn('CP949 CSV 디코딩 실패:', error);
+      }
+      return utf8Results;
+    }
+
+    async function parseOneCSV(file, kind) {
+      try {
+        const results = await decodeCSVFile(file);
+        const points = [];
+        results.data.forEach(row => {
+          const lat = findCoordinate(row, 'lat');
+          const lng = findCoordinate(row, 'lng');
+          if (lat !== null && lng !== null && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 && !(lat === 0 && lng === 0)) points.push([lat, lng]);
+        });
+        return { points, headers: results.meta.fields || [], errors: results.errors || [] };
+      } catch (error) {
+        console.error('CSV 읽기 실패:', error);
+        return { points: [], headers: [], errors: ['CSV 읽기 실패'] };
+      }
     }
     async function parseCSVFiles() {
       const lampFile = document.getElementById('lamp-csv').files[0];
