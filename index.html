@@ -362,6 +362,7 @@
     // 카카오지도 상 레이어 배열들
     let kakaoMarkers = [];
     let kakaoPolylines = [];
+    let facilityClusterers = [];
     let kakaoPlaces = null;
     let kakaoGeocoder = null;
     let lastSearchFavorite = null;
@@ -401,7 +402,13 @@
     }
 
     // 지도 레이어를 종류별로 관리해 경로와 시설 마커가 서로 지워지지 않게 한다.
+    function clearFacilityClusters() {
+      facilityClusterers.forEach(clusterer => clusterer.clear());
+      facilityClusterers = [];
+    }
+
     function clearKakaoLayers() {
+      clearFacilityClusters();
       kakaoMarkers.forEach(marker => marker.setMap(null));
       kakaoPolylines.forEach(line => line.setMap(null));
       kakaoMarkers = [];
@@ -478,6 +485,52 @@
       return { visibleCCTV, visibleLamp };
     }
 
+    // 업로드된 서울시 전체 시설을 지도에 표시한다.
+    // 다수의 좌표는 MarkerClusterer로 묶어 지도 성능 저하를 줄인다.
+    function showAllSeoulFacilities() {
+      if (!kakaoMapObj || !window.kakao.maps.MarkerClusterer) {
+        setKakaoStatus('지도 군집 표시 기능을 불러오지 못했습니다. 페이지를 새로고침해 주세요.');
+        return;
+      }
+
+      clearKakaoLayers();
+      const bounds = new kakao.maps.LatLngBounds();
+      const makeMarkers = (points, label) => points
+        .filter(pt => pt[0] >= SEOUL_BOUNDS.minLat && pt[0] <= SEOUL_BOUNDS.maxLat &&
+                      pt[1] >= SEOUL_BOUNDS.minLng && pt[1] <= SEOUL_BOUNDS.maxLng)
+        .map(pt => {
+          const position = new kakao.maps.LatLng(pt[0], pt[1]);
+          bounds.extend(position);
+          return new kakao.maps.Marker({ position, title: label });
+        });
+
+      const cctvMarkers = makeMarkers(cctvData, 'CCTV');
+      const lampMarkers = makeMarkers(lampData, '가로등');
+
+      if (cctvMarkers.length) {
+        const clusterer = new kakao.maps.MarkerClusterer({
+          map: kakaoMapObj, averageCenter: true, minLevel: 7,
+          disableClickZoom: false, markers: cctvMarkers
+        });
+        facilityClusterers.push(clusterer);
+      }
+      if (lampMarkers.length) {
+        const clusterer = new kakao.maps.MarkerClusterer({
+          map: kakaoMapObj, averageCenter: true, minLevel: 7,
+          disableClickZoom: false, markers: lampMarkers
+        });
+        facilityClusterers.push(clusterer);
+      }
+
+      if (!bounds.isEmpty()) {
+        kakaoMapObj.setBounds(bounds);
+      } else {
+        kakaoMapObj.setCenter(new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]));
+        kakaoMapObj.setLevel(8);
+      }
+      return { visibleCCTV: cctvMarkers.length, visibleLamp: lampMarkers.length };
+    }
+
     // 카카오 지도 SDK 동적 로드 및 초기화
     function initKakaoMapSDK() {
       if (!/^https?:$/.test(location.protocol)) {
@@ -492,7 +545,7 @@
 
       const sdk = document.createElement('script');
       sdk.async = true;
-      sdk.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + encodeURIComponent(javascriptKey.trim()) + '&autoload=false&libraries=services';
+      sdk.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + encodeURIComponent(javascriptKey.trim()) + '&autoload=false&libraries=services,clusterer';
       
       sdk.onerror = function() {
         setKakaoStatus('카카오맵 SDK 로드 실패! Web 플랫폼 도메인 등록을 확인하세요.');
@@ -733,12 +786,10 @@
         reports.push('CCTV ' + result.points.length + '대' + (result.points.length ? '' : ' (위도·경도 열을 찾지 못함: ' + result.headers.join(', ') + ')'));
       }
       if (kakaoMapObj) {
-        clearKakaoLayers();
-        const center = kakaoMapObj.getCenter();
-        const counts = renderKakaoMarkers(center.getLat(), center.getLng(), 1000);
-        setKakaoStatus('CSV 반영 완료 · 현재 지도 주변 가로등 ' + counts.visibleLamp + '개 / CCTV ' + counts.visibleCCTV + '대');
+        const counts = showAllSeoulFacilities();
+        setKakaoStatus('서울시 전체 표시 · 가로등 ' + counts.visibleLamp + '개 / CCTV ' + counts.visibleCCTV + '대 (마커 군집 표시)');
       }
-      alert('CSV 분석 완료\\n' + reports.join('\\n') + '\\n좌표는 전국 범위로 저장되어 검색 위치에 따라 집계됩니다.');
+      alert('CSV 분석 완료\\n' + reports.join('\\n') + '\\n서울시 좌표 범위의 업로드 시설을 지도 전체에 표시합니다. 마커가 겹치는 구간은 군집으로 묶여 표시됩니다.');
     }
 
     function favoriteCurrentRoute() { if (!activeDestination) { alert('먼저 목적지를 검색하고 경로를 분석해 주세요.'); return; } saveFavorite('경로: ' + activeDestination.name, { type: 'route', name: activeDestination.name, coords: activeDestination.coords }); alert('즐겨찾기에 저장했습니다.'); }
