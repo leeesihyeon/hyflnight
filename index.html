@@ -62,7 +62,7 @@
 <body class="bg-slate-900 font-sans text-slate-800 antialiased flex flex-col h-screen overflow-hidden">
 
   <!-- Header -->
-  <header class="bg-brand-950 text-white border-b border-brand-800 px-6 py-4 flex flex-wrap items-center justify-between z-10 shadow-lg shrink-0">
+  <header id="app-header" style="display:none" class="bg-brand-950 text-white border-b border-brand-800 px-6 py-4 flex flex-wrap items-center justify-between z-10 shadow-lg shrink-0">
     <div class="flex items-center space-x-3">
       <div class="bg-blue-600 p-2.5 rounded-xl shadow-md">
         <i data-lucide="shield-check" class="w-6 h-6 text-white"></i>
@@ -72,10 +72,11 @@
           한영외고 심야 안전 귀가길
           <span class="text-xs font-normal bg-blue-900/80 text-blue-200 px-2.5 py-0.5 rounded-full border border-blue-700">야간자율학습(22시~01시)</span>
         </h1>
-        <p class="text-xs text-slate-400">가로등·CCTV 밀도 기반 실시간 길안내 (카카오 지도 연동)</p>
+        <p class="text-xs text-slate-400">가로등·CCTV 위치 데이터 기반 안전 길안내</p>
       </div>
     </div>
     
+    <button onclick="toggleDrawer(true)" aria-label="메뉴 열기" class="ml-auto mr-3 p-2 rounded-lg hover:bg-blue-900"><i data-lucide="menu" class="w-6 h-6"></i></button>
     <!-- Info Badge -->
     <div class="hidden md:flex items-center gap-4 text-xs text-slate-300">
       <div class="flex items-center gap-1.5 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
@@ -90,7 +91,7 @@
   </header>
 
   <!-- Main Content Layout -->
-  <div class="flex flex-1 relative overflow-hidden">
+  <div id="app-main" style="display:none" class="flex flex-1 relative overflow-hidden">
     
     <!-- Sidebar Control Panel -->
     <aside class="w-full md:w-96 bg-white border-r border-slate-200 flex flex-col h-full z-20 shadow-xl overflow-hidden shrink-0">
@@ -128,15 +129,9 @@
 
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
-                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-600"></i> 목적지 선택
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-600"></i> 목적지 검색
               </label>
-              <select id="route-end" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                <option value="godeok">고덕역 4번 출구 (약 650m)</option>
-                <option value="myeongil">명일동 아파트 단지 사거리 (약 850m)</option>
-                <option value="sangil">상일동역 3번 출구 (약 1.2km)</option>
-                <option value="amsa">암사동 주거 밀집 구역 (약 1.5km)</option>
-                <option value="out_of_seoul">[예외 테스트] 서울시 외 지역 (경기도 수원)</option>
-              </select>
+              <input id="route-end" type="text" list="destination-suggestions" placeholder="목적지 주소 또는 장소 검색" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"><datalist id="destination-suggestions"><option value="고덕역 4번 출구"><option value="명일역"><option value="상일동역"></datalist>
             </div>
 
             <button onclick="calculateRoute()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center justify-center gap-2">
@@ -155,14 +150,15 @@
               <div class="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">추천</div>
               <div class="flex justify-between items-start">
                 <div>
-                  <h4 class="font-bold text-sm text-slate-900">최적 안전 경로</h4>
-                  <p class="text-[11px] text-slate-500">가로등·CCTV 밀도가 가장 높은 길</p>
+                  <h4 class="font-bold text-sm text-slate-900">경로 주변 시설 참고</h4>
+                  <p class="text-[11px] text-slate-500">학교와 목적지를 잇는 직선 구간 주변 시설 참고</p>
                 </div>
                 <div class="text-right">
                   <span id="safe-score" class="text-xl font-extrabold text-emerald-600">92점</span>
                   <span class="text-[10px] text-slate-400 block">/ 100점</span>
                 </div>
               </div>
+              <button onclick="favoriteCurrentRoute()" class="w-full text-xs font-semibold text-blue-700 bg-white border border-blue-200 rounded-lg py-2">☆ 이 경로 즐겨찾기</button>
               <div class="grid grid-cols-3 gap-2 text-center text-xs bg-white rounded-lg p-2 border border-emerald-100">
                 <div>
                   <span class="text-[10px] text-slate-400 block">거리</span>
@@ -183,7 +179,7 @@
             <div class="border border-slate-200 bg-slate-50 rounded-xl p-3.5 space-y-2">
               <div class="flex justify-between items-start">
                 <div>
-                  <h4 class="font-bold text-sm text-slate-700">최단 거리 경로</h4>
+                  <h4 class="font-bold text-sm text-slate-700">직선 거리 참고</h4>
                   <p class="text-[11px] text-slate-400">거리 위주 (골목길 포함 가능)</p>
                 </div>
                 <div class="text-right">
@@ -213,11 +209,11 @@
         <div id="tab-search" class="space-y-4 hidden">
           <div class="bg-slate-100 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-600 flex gap-2">
             <i data-lucide="info" class="w-4 h-4 text-slate-500 shrink-0 mt-0.5"></i>
-            <span>서울시 내 특정 장소나 동 이름을 입력하면 카카오 지도 위에 주변 반경 300m 이내 시설을 표출합니다.</span>
+            <span>장소나 주소를 검색하면 해당 위치 주변 반경 300m 이내의 업로드 시설을 표시합니다.</span>
           </div>
 
           <div class="space-y-2">
-            <label class="block text-xs font-bold text-slate-700">서울시 특정 위치 입력</label>
+            <label class="block text-xs font-bold text-slate-700">장소 또는 주소 입력</label>
             <div class="flex gap-2">
               <input type="text" id="search-input" placeholder="예: 명일동, 고덕역, 상일동" class="flex-1 text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
               <button onclick="searchLocation()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-lg text-xs shadow transition">
@@ -245,6 +241,7 @@
                 </div>
               </div>
 
+              <button onclick="favoriteCurrentSearch()" class="w-full text-xs font-semibold text-blue-700 bg-white border border-blue-200 rounded-lg py-2">☆ 이 위치 즐겨찾기</button>
               <div id="search-safety-level" class="text-xs text-slate-700 bg-white p-2.5 rounded-lg border border-slate-200">
                 주변 조명 및 방범 시설이 잘 구비되어 있습니다.
               </div>
@@ -256,17 +253,17 @@
         <div id="tab-data" class="space-y-4 hidden">
           <div class="bg-blue-50 border border-blue-200 rounded-xl p-3.5 text-xs text-blue-900 flex gap-2">
             <i data-lucide="info" class="w-4 h-4 text-blue-600 shrink-0 mt-0.5"></i>
-            <span>공공데이터포털에서 받으신 CSV 파일을 로드하여 카카오 지도 데이터로 반영합니다.</span>
+            <span>CSV의 위도·경도 열을 자동 탐색해 전국 좌표를 반영합니다. 업로드한 데이터만 실제 시설 개수로 집계합니다.</span>
           </div>
 
           <div class="space-y-3 text-xs">
             <div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
-              <label class="block font-bold text-slate-700 mb-1">서울특별시 가로등 위치 CSV</label>
+              <label class="block font-bold text-slate-700 mb-1">가로등 위치 CSV (위도·경도 열 자동 인식)</label>
               <input type="file" id="lamp-csv" accept=".csv" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
             </div>
 
             <div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
-              <label class="block font-bold text-slate-700 mb-1">전국 CCTV 표준 데이터 CSV</label>
+              <label class="block font-bold text-slate-700 mb-1">CCTV 위치 CSV (위도·경도 열 자동 인식)</label>
               <input type="file" id="cctv-csv" accept=".csv" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
             </div>
 
@@ -282,16 +279,16 @@
       <footer class="p-4 bg-slate-50 border-t border-slate-200 text-[11px] text-slate-500 space-y-2 shrink-0">
         <div class="flex items-center justify-between font-semibold text-slate-700">
           <span>데이터 출처 및 기준</span>
-          <span class="text-blue-600">서울시 기준</span>
+          <span class="text-blue-600">업로드 데이터 기준</span>
         </div>
         <ul class="space-y-1 list-disc pl-3 text-[10px]">
-          <li>가로등: 서울특별시_가로등 위치 정보 (2022.11 기준)</li>
-          <li>CCTV: 전국CCTV표준데이터 (2026 기준)</li>
+          <li>가로등: 사용자가 업로드한 CSV 좌표</li>
+          <li>CCTV: 사용자가 업로드한 CSV 좌표</li>
           <li>지도: Kakao Maps SDK</li>
         </ul>
         <div class="pt-2 border-t border-slate-200 text-[10px] text-slate-400 flex justify-between">
           <span>🔒 API 인증 완료 / 개인정보 미저장</span>
-          <span>한영외고 전용</span>
+          <span>검색 지역 제한 없음</span>
         </div>
       </footer>
 
@@ -332,6 +329,9 @@
 
   </div>
 
+  <section id="home-screen" class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950 text-white p-6"><div class="max-w-xl w-full text-center space-y-6"><div class="mx-auto w-20 h-20 rounded-3xl bg-blue-600 flex items-center justify-center"><i data-lucide="shield-check" class="w-11 h-11"></i></div><p class="text-blue-300 text-sm font-semibold tracking-widest">SAFE NIGHT ROUTE</p><h1 class="text-3xl md:text-5xl font-extrabold">안전한 귀가의 시작</h1><p class="text-slate-300">가로등과 CCTV 위치 데이터를 바탕으로 목적지 주변과 이동 경로를 확인하세요.</p><button onclick="enterApp()" class="w-full sm:w-auto px-10 py-4 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg">안전 지도 시작하기 <span aria-hidden="true">→</span></button></div></section>
+  <aside id="menu-drawer" class="fixed inset-0 z-[55] hidden"><div class="absolute inset-0 bg-slate-950/50" onclick="toggleDrawer(false)"></div><div class="absolute right-0 top-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl p-5 flex flex-col gap-4"><div class="flex justify-between items-center"><h2 class="font-bold text-lg">메뉴</h2><button onclick="toggleDrawer(false)" class="p-2 rounded-lg hover:bg-slate-100" aria-label="닫기">✕</button></div><button onclick="showProfile()" class="text-left p-3 rounded-xl bg-slate-50 hover:bg-blue-50"><span class="font-semibold">나</span><span class="block text-xs text-slate-500 mt-1">내 이용 정보</span></button><section class="flex-1 min-h-0"><h3 class="font-bold mb-2">즐겨찾기</h3><div id="favorites-list" class="space-y-2 overflow-y-auto max-h-[70vh] text-sm text-slate-600">저장된 즐겨찾기가 없습니다.</div></section><p id="profile-info" class="text-xs text-slate-400">즐겨찾기는 이 브라우저에 저장됩니다.</p></div></aside>
+
   <!-- Out of Seoul Warning Modal -->
   <div id="out-of-seoul-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 text-center space-y-4 transform transition-all">
@@ -363,6 +363,8 @@
     let kakaoMarkers = [];
     let kakaoPolylines = [];
     let kakaoPlaces = null;
+    let kakaoGeocoder = null;
+    let lastSearchFavorite = null;
 
     // 서울시 행정 경계 Bounds
     const SEOUL_BOUNDS = {
@@ -374,18 +376,9 @@
 
     const HANYOUNG_COORDS = [37.5484, 127.1574]; // 한영외고 좌표
 
-    let cctvData = [
-      [37.5489, 127.1565], [37.5492, 127.1580], [37.5501, 127.1570], [37.5478, 127.1560],
-      [37.5485, 127.1592], [37.5512, 127.1558], [37.5520, 127.1542], [37.5535, 127.1538],
-      [37.5542, 127.1530], [37.5550, 127.1548], [37.5460, 127.1580], [37.5452, 127.1600],
-      [37.5448, 127.1620], [37.5440, 127.1645], [37.5560, 127.1520], [37.5570, 127.1510]
-    ];
+    let cctvData = [];
 
-    let lampData = [
-      [37.5487, 127.1568], [37.5495, 127.1575], [37.5505, 127.1565], [37.5480, 127.1562],
-      [37.5488, 127.1588], [37.5515, 127.1552], [37.5525, 127.1540], [37.5538, 127.1535],
-      [37.5545, 127.1528], [37.5552, 127.1545], [37.5463, 127.1582], [37.5455, 127.1605]
-    ];
+    let lampData = [];
 
     function setKakaoStatus(msg) {
       const el = document.getElementById('kakao-status-bar');
@@ -394,10 +387,7 @@
 
     lucide.createIcons();
 
-    function isInsideSeoul(lat, lng) {
-      return lat >= SEOUL_BOUNDS.minLat && lat <= SEOUL_BOUNDS.maxLat &&
-             lng >= SEOUL_BOUNDS.minLng && lng <= SEOUL_BOUNDS.maxLng;
-    }
+    function isInsideSeoul(lat, lng) { return Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180; }
 
     function getDistanceInMeters(lat1, lon1, lat2, lon2) {
       const R = 6371000;
@@ -523,6 +513,7 @@
             });
 
             kakaoPlaces = new kakao.maps.services.Places();
+            kakaoGeocoder = new kakao.maps.services.Geocoder();
             renderKakaoMarkers(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1], 800);
             setKakaoStatus('카카오 지도 준비 완료! (한영외고 중심)');
           } catch(e) {
@@ -554,103 +545,54 @@
       }
     }
 
-    const DESTINATIONS = {
-      godeok: { name: "고덕역 4번 출구", coords: [37.5550, 127.1540], inSeoul: true },
-      myeongil: { name: "명일동 아파트 단지 사거리", coords: [37.5510, 127.1440], inSeoul: true },
-      sangil: { name: "상일동역 3번 출구", coords: [37.5562, 127.1662], inSeoul: true },
-      amsa: { name: "암사동 주거 밀집 구역", coords: [37.5500, 127.1280], inSeoul: true },
-      out_of_seoul: { name: "경기도 수원시", coords: [37.2636, 127.0286], inSeoul: false }
-    };
+    const DESTINATIONS = {};
+    let activeDestination = null;
 
-    // 카카오 지도 위에 귀가 경로 그리기 & 점수 계산
     function calculateRoute() {
-      const selectedKey = document.getElementById('route-end').value;
-      const target = DESTINATIONS[selectedKey];
+      const query = document.getElementById('route-end').value.trim();
+      if (!query) { alert('목적지를 검색해 입력해 주세요.'); return; }
+      if (!kakaoMapObj || !kakaoPlaces) { setKakaoStatus('지도 검색 기능을 불러오는 중입니다.'); return; }
+      setKakaoStatus('목적지 검색 중...');
+      kakaoPlaces.keywordSearch(query, function(data, status) {
+        if (status !== kakao.maps.services.Status.OK || !data.length) {
+          kakaoGeocoder.addressSearch(query, function(addressData, addressStatus) {
+            if (addressStatus !== kakao.maps.services.Status.OK || !addressData.length) {
+              setKakaoStatus('목적지를 찾지 못했습니다. 주소나 장소명을 확인해 주세요.'); return;
+            }
+            useDestination({ place_name: query, y: addressData[0].y, x: addressData[0].x });
+          });
+          return;
+        }
+        useDestination(data[0]);
+      });
+    }
 
-      if (!target.inSeoul || !isInsideSeoul(target.coords[0], target.coords[1])) {
-        showModal();
-        return;
-      }
-
-      if (!kakaoMapObj) return;
-
+    function useDestination(place) {
+      const target = { name: place.place_name || place.address_name || place.road_address_name, coords: [Number(place.y), Number(place.x)] };
+      if (!isInsideSeoul(...target.coords)) { alert('목적지 좌표를 확인할 수 없습니다.'); return; }
+      activeDestination = target;
       clearKakaoLayers();
-
-      // 경로와 시설을 하나의 지도에 함께 그린다.
-      const safeCoords = [
-        HANYOUNG_COORDS,
-        [HANYOUNG_COORDS[0] + 0.002, HANYOUNG_COORDS[1] - 0.001],
-        target.coords
-      ];
-      const counts = renderKakaoMarkers(target.coords[0], target.coords[1], 120, safeCoords);
-
-      // 최적 안전 경로 좌표 (녹색 실선)
-      const safePath = safeCoords.map(pt => new kakao.maps.LatLng(pt[0], pt[1]));
-
-      // 최단 거리 경로 좌표 (점선)
-      const shortPath = [
-        new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]),
-        new kakao.maps.LatLng(target.coords[0], target.coords[1])
-      ];
-
-      // 카카오 지도 Polyline 생성
-      const safePolyline = new kakao.maps.Polyline({
-        path: safePath,
-        strokeWeight: 6,
-        strokeColor: '#10b981',
-        strokeOpacity: 0.9,
-        strokeStyle: 'solid'
-      });
-
-      const shortPolyline = new kakao.maps.Polyline({
-        path: shortPath,
-        strokeWeight: 4,
-        strokeColor: '#94a3b8',
-        strokeOpacity: 0.8,
-        strokeStyle: 'dash'
-      });
-
-      safePolyline.setMap(kakaoMapObj);
-      shortPolyline.setMap(kakaoMapObj);
-
-      kakaoPolylines.push(safePolyline, shortPolyline);
-
-      // 목적지 마커 추가
-      const destMarker = new kakao.maps.Marker({
-        position: new kakao.maps.LatLng(target.coords[0], target.coords[1]),
-        map: kakaoMapObj,
-        title: target.name
-      });
-      kakaoMarkers.push(destMarker);
-
-      // 카카오 지도 중심 재설정
-      const bounds = new kakao.maps.LatLngBounds();
-      safePath.forEach(pt => bounds.extend(pt));
-      kakaoMapObj.setBounds(bounds);
-
-      // 실데이터 수치 연산 및 카드 표출
-      const safeDist = Math.round(getDistanceInMeters(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1], target.coords[0], target.coords[1]) * 1.15);
-      const shortDist = Math.round(getDistanceInMeters(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1], target.coords[0], target.coords[1]));
-
-      const safeCCTV = Math.round(counts.visibleCCTV * 2.5) + 12;
-      const safeLamp = Math.round(counts.visibleLamp * 2.1) + 8;
-      const shortCCTV = Math.max(3, Math.round(safeCCTV * 0.4));
-      const shortLamp = Math.max(2, Math.round(safeLamp * 0.35));
-
-      const safeScoreCalc = Math.min(98, Math.round((safeCCTV * 15 + safeLamp * 8) / (safeDist / 1000)));
-      const shortScoreCalc = Math.min(75, Math.round((shortCCTV * 15 + shortLamp * 8) / (shortDist / 1000)));
-
-      document.getElementById('safe-score').innerText = safeScoreCalc + '점';
-      document.getElementById('safe-dist').innerText = safeDist + 'm';
-      document.getElementById('safe-cctv').innerText = safeCCTV + '대';
-      document.getElementById('safe-lamp').innerText = safeLamp + '개';
-
-      document.getElementById('short-score').innerText = shortScoreCalc + '점';
-      document.getElementById('short-dist').innerText = shortDist + 'm';
-      document.getElementById('short-cctv').innerText = shortCCTV + '대';
-      document.getElementById('short-lamp').innerText = shortLamp + '개';
-
+      const counts = renderKakaoMarkers(target.coords[0], target.coords[1], 120, [HANYOUNG_COORDS, target.coords]);
+      const start = new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]);
+      const end = new kakao.maps.LatLng(target.coords[0], target.coords[1]);
+      const line = new kakao.maps.Polyline({ path: [start, end], strokeWeight: 5, strokeColor: '#10b981', strokeOpacity: 0.9 });
+      line.setMap(kakaoMapObj); kakaoPolylines.push(line);
+      const marker = new kakao.maps.Marker({ position: end, map: kakaoMapObj, title: target.name });
+      kakaoMarkers.push(marker);
+      const bounds = new kakao.maps.LatLngBounds(); bounds.extend(start); bounds.extend(end); kakaoMapObj.setBounds(bounds);
+      const dist = Math.round(getDistanceInMeters(...HANYOUNG_COORDS, ...target.coords));
+      const score = Math.min(100, Math.round((counts.visibleCCTV * 15 + counts.visibleLamp * 8) / Math.max(dist / 1000, 0.1)));
+      document.getElementById('safe-score').innerText = score + '점';
+      document.getElementById('safe-dist').innerText = dist + 'm';
+      document.getElementById('safe-cctv').innerText = counts.visibleCCTV + '대';
+      document.getElementById('safe-lamp').innerText = counts.visibleLamp + '개';
+      document.getElementById('short-score').innerText = score + '점';
+      document.getElementById('short-dist').innerText = dist + 'm';
+      document.getElementById('short-cctv').innerText = counts.visibleCCTV + '대';
+      document.getElementById('short-lamp').innerText = counts.visibleLamp + '개';
       document.getElementById('route-result-container').classList.remove('hidden');
+
+      setKakaoStatus('목적지와 업로드된 주변 시설을 표시했습니다.');
     }
 
     // 카카오 지도 위치 탐색
@@ -658,14 +600,10 @@
       const query = document.getElementById('search-input').value.trim();
       
       if (!query) {
-        alert("검색할 서울시 내 장소 이름을 입력하세요.");
+        alert("검색할 장소 이름이나 주소를 입력하세요.");
         return;
       }
 
-      if (query.includes("수원") || query.includes("부산") || query.includes("인천") || query.includes("성남") || query.includes("하남")) {
-        showModal();
-        return;
-      }
 
       if (!kakaoMapObj || !kakaoPlaces) {
         setKakaoStatus('카카오 지도 검색 기능을 불러오는 중입니다.');
@@ -676,17 +614,13 @@
       kakaoPlaces.keywordSearch(query, function(data, status) {
         if (status !== kakao.maps.services.Status.OK || !data.length) {
           setKakaoStatus('검색 결과가 없습니다. 장소 이름을 다시 확인해 주세요.');
-          alert('장소를 찾지 못했습니다. 서울시 내 장소명이나 역 이름으로 검색해 주세요.');
+          alert('장소를 찾지 못했습니다. 장소명, 도로명 주소 또는 역 이름으로 검색해 주세요.');
           return;
         }
 
         const place = data[0];
         const searchLat = Number(place.y);
         const searchLng = Number(place.x);
-        if (!isInsideSeoul(searchLat, searchLng)) {
-          showModal();
-          return;
-        }
 
         clearKakaoLayers();
         kakaoMapObj.setCenter(new kakao.maps.LatLng(searchLat, searchLng));
@@ -715,56 +649,103 @@
           safetyBox.innerText = "검색 지점 반경 300m 내 시설 데이터가 적게 확인됩니다.";
         }
         document.getElementById('search-result-container').classList.remove('hidden');
-        setKakaoStatus('검색 지점과 주변 안전시설을 지도에 표시했습니다.');
+        lastSearchFavorite = { type: 'place', name: place.place_name, coords: [searchLat, searchLng] };
+        setKakaoStatus('검색 지점과 업로드된 주변 시설을 표시했습니다.');
       });
     }
 
-    function parseCSVFiles() {
+    function normalizeHeader(value) {
+      return String(value || '').replace(/[\s_()（）-]/g, '').replace(/^\uFEFF/, '').toLowerCase();
+    }
+    function findCoordinate(row, kind) {
+      const keys = Object.keys(row);
+      const aliases = kind === 'lat'
+        ? ['위도','wgs84위도','위도(latitude)','latitude','lat','y좌표','y']
+        : ['경도','wgs84경도','경도(longitude)','longitude','lng','lon','x좌표','x'];
+      const normalized = keys.map(k => [k, normalizeHeader(k)]);
+      const exact = normalized.find(([,n]) => aliases.some(a => n === normalizeHeader(a)));
+      const partial = exact || normalized.find(([,n]) => aliases.some(a => n.includes(normalizeHeader(a))));
+      if (!partial) return null;
+      const value = Number(String(row[partial[0]] ?? '').replace(/,/g, '').trim());
+      return Number.isFinite(value) ? value : null;
+    }
+    function parseOneCSV(file, kind) {
+      return new Promise(resolve => Papa.parse(file, {
+        header: true, skipEmptyLines: true, dynamicTyping: false,
+        complete: results => {
+          const points = [];
+          results.data.forEach(row => {
+            const lat = findCoordinate(row, 'lat');
+            const lng = findCoordinate(row, 'lng');
+            if (lat !== null && lng !== null && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 && !(lat === 0 && lng === 0)) points.push([lat, lng]);
+          });
+          resolve({ points, headers: results.meta.fields || [], errors: results.errors || [] });
+        },
+        error: () => resolve({ points: [], headers: [], errors: ['CSV 읽기 실패'] })
+      }));
+    }
+    async function parseCSVFiles() {
       const lampFile = document.getElementById('lamp-csv').files[0];
       const cctvFile = document.getElementById('cctv-csv').files[0];
-
-      if (!lampFile && !cctvFile) {
-        alert("업로드할 CSV 파일을 먼저 선택해 주세요.");
-        return;
-      }
-
-      let parsedCount = 0;
-
+      if (!lampFile && !cctvFile) { alert('업로드할 CSV 파일을 먼저 선택해 주세요.'); return; }
+      const reports = [];
       if (lampFile) {
-        Papa.parse(lampFile, {
-          header: true,
-          dynamicTyping: true,
-          complete: function(results) {
-            lampData = results.data
-              .filter(row => row.위도 && row.경도)
-              .map(row => [row.위도, row.경도]);
-            parsedCount++;
-            checkFinished();
-          }
-        });
+        const result = await parseOneCSV(lampFile, 'lamp');
+        lampData = result.points;
+        reports.push('가로등 ' + result.points.length + '개' + (result.points.length ? '' : ' (위도·경도 열을 찾지 못함: ' + result.headers.join(', ') + ')'));
       }
-
       if (cctvFile) {
-        Papa.parse(cctvFile, {
-          header: true,
-          dynamicTyping: true,
-          complete: function(results) {
-            cctvData = results.data
-              .filter(row => (row.WGS84위도 || row.위도) && (row.WGS84경도 || row.경도))
-              .map(row => [row.WGS84위도 || row.위도, row.WGS84경도 || row.경도]);
-            parsedCount++;
-            checkFinished();
-          }
-        });
+        const result = await parseOneCSV(cctvFile, 'cctv');
+        cctvData = result.points;
+        reports.push('CCTV ' + result.points.length + '대' + (result.points.length ? '' : ' (위도·경도 열을 찾지 못함: ' + result.headers.join(', ') + ')'));
       }
+      if (kakaoMapObj) {
+        clearKakaoLayers();
+        const center = kakaoMapObj.getCenter();
+        const counts = renderKakaoMarkers(center.getLat(), center.getLng(), 1000);
+        setKakaoStatus('CSV 반영 완료 · 현재 지도 주변 가로등 ' + counts.visibleLamp + '개 / CCTV ' + counts.visibleCCTV + '대');
+      }
+      alert('CSV 분석 완료\\n' + reports.join('\\n') + '\\n좌표는 전국 범위로 저장되어 검색 위치에 따라 집계됩니다.');
+    }
 
-      function checkFinished() {
-        alert(`CSV 데이터 반영 완료! (가로등: ${lampData.length}개, CCTV: ${cctvData.length}대)`);
-        if (kakaoMapObj) {
-          clearKakaoLayers();
-          renderKakaoMarkers(kakaoMapObj.getCenter().getLat(), kakaoMapObj.getCenter().getLng(), 1000);
-        }
+    function favoriteCurrentRoute() { if (!activeDestination) { alert('먼저 목적지를 검색하고 경로를 분석해 주세요.'); return; } saveFavorite('경로: ' + activeDestination.name, { type: 'route', name: activeDestination.name, coords: activeDestination.coords }); alert('즐겨찾기에 저장했습니다.'); }
+    function favoriteCurrentSearch() { if (!lastSearchFavorite) { alert('먼저 위치를 검색해 주세요.'); return; } saveFavorite('장소: ' + lastSearchFavorite.name, lastSearchFavorite); alert('즐겨찾기에 저장했습니다.'); }
+    function getFavorites() {
+      try { return JSON.parse(localStorage.getItem('hyflnight-favorites') || '[]'); } catch(e) { return []; }
+    }
+    function saveFavorite(label, item) {
+      const list = getFavorites();
+      if (!list.some(x => x.label === label)) {
+        list.unshift({ label, ...item }); localStorage.setItem('hyflnight-favorites', JSON.stringify(list.slice(0, 30)));
       }
+      renderFavorites();
+    }
+    function renderFavorites() {
+      const el = document.getElementById('favorites-list'); if (!el) return;
+      const list = getFavorites();
+      el.innerHTML = '';
+      if (!list.length) { el.textContent = '저장된 즐겨찾기가 없습니다.'; return; }
+      list.forEach((item, index) => {
+        const row = document.createElement('div'); row.className = 'flex items-center gap-2 p-2 rounded-lg bg-slate-50';
+        const open = document.createElement('button'); open.className = 'flex-1 text-left hover:text-blue-700'; open.textContent = item.label;
+        open.onclick = () => { toggleDrawer(false); if (item.coords) { switchTab(item.type === 'route' ? 'route' : 'search'); if (item.type === 'route') { document.getElementById('route-end').value = item.name; calculateRoute(); } else { document.getElementById('search-input').value = item.name; searchLocation(); } } };
+        const del = document.createElement('button'); del.className = 'text-slate-400 hover:text-red-600 px-2'; del.textContent = '삭제';
+        del.onclick = () => { const next = getFavorites(); next.splice(index,1); localStorage.setItem('hyflnight-favorites', JSON.stringify(next)); renderFavorites(); };
+        row.append(open, del); el.append(row);
+      });
+    }
+    function enterApp() {
+      document.getElementById('home-screen').classList.add('hidden');
+      document.getElementById('app-header').style.display = 'flex';
+      document.getElementById('app-main').style.display = 'flex';
+      if (kakaoMapObj) kakaoMapObj.relayout();
+    }
+    function toggleDrawer(open) {
+      document.getElementById('menu-drawer').classList.toggle('hidden', !open);
+      if (open) renderFavorites();
+    }
+    function showProfile() {
+      document.getElementById('profile-info').textContent = '안전 귀가 지도 사용자 · 즐겨찾기 ' + getFavorites().length + '개';
     }
 
     function showModal() {
