@@ -655,7 +655,7 @@
     }
 
     function normalizeHeader(value) {
-      return String(value || '').replace(/[\\s_()（）\\-]/g, '').replace(/^\\uFEFF/, '').toLowerCase();
+      return String(value || '').replace(/[\s_()（）-]/g, '').replace(/^\uFEFF/, '').toLowerCase();
     }
     function findCoordinate(row, kind) {
       const keys = Object.keys(row);
