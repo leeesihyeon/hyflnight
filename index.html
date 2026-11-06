@@ -36,6 +36,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <style>
+    #home-screen { background: linear-gradient(180deg, rgba(30,27,75,.28), rgba(30,27,75,.08)), url('assets/pixel-safe-night-background.svg') center / cover no-repeat; }
+    #home-screen::before { content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(39,31,87,.25),rgba(39,31,87,.04) 55%,rgba(25,35,50,.22)); pointer-events:none; }
+    #home-screen > div { position:relative; z-index:1; text-shadow:0 2px 10px rgba(25,25,55,.28); }
     #kakao-map {
       width: 100%;
       height: 100%;
@@ -120,6 +123,7 @@
           </div>
 
           <div class="space-y-3">
+            <div class="flex justify-end"><button onclick="resetMapState()" class="text-[11px] font-semibold text-slate-500 hover:text-blue-700">✕ 검색 초기화</button></div>
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
                 <i data-lucide="building" class="w-3.5 h-3.5 text-blue-600"></i> 출발지
@@ -213,7 +217,7 @@
           </div>
 
           <div class="space-y-2">
-            <label class="block text-xs font-bold text-slate-700">장소 또는 주소 입력</label>
+            <div class="flex justify-between items-center"><label class="block text-xs font-bold text-slate-700">장소 또는 주소 입력</label><button onclick="resetMapState()" class="text-[11px] font-semibold text-slate-500 hover:text-blue-700">✕ 초기화</button></div>
             <div class="flex gap-2">
               <input type="text" id="search-input" placeholder="예: 명일동, 고덕역, 상일동" class="flex-1 text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
               <button onclick="searchLocation()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-lg text-xs shadow transition">
@@ -305,6 +309,8 @@
         카카오 지도 연결 중...
       </div>
 
+      <button onclick="resetMapState()" class="absolute top-4 right-4 z-30 bg-white/95 hover:bg-white text-slate-700 border border-slate-200 shadow-md rounded-xl px-3 py-2 text-xs font-bold">↺ 검색 초기화</button>
+
       <!-- 지도 범례 -->
       <div id="map-legend" class="absolute bottom-6 right-6 bg-white/95 backdrop-blur-md border border-slate-200 p-3.5 rounded-2xl shadow-xl z-20 text-xs space-y-2 w-48">
         <h5 class="font-bold text-slate-800 text-[11px] uppercase tracking-wider mb-1 border-b pb-1">지도 범례</h5>
@@ -329,7 +335,7 @@
 
   </div>
 
-  <section id="home-screen" class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950 text-white p-6"><div class="max-w-xl w-full text-center space-y-6"><div class="mx-auto w-20 h-20 rounded-3xl bg-blue-600 flex items-center justify-center"><i data-lucide="shield-check" class="w-11 h-11"></i></div><p class="text-blue-300 text-sm font-semibold tracking-widest">SAFE NIGHT ROUTE</p><h1 class="text-3xl md:text-5xl font-extrabold">안전한 귀가의 시작</h1><p class="text-slate-300">가로등과 CCTV 위치 데이터를 바탕으로 목적지 주변과 이동 경로를 확인하세요.</p><button onclick="enterApp()" class="w-full sm:w-auto px-10 py-4 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg">안전 지도 시작하기 <span aria-hidden="true">→</span></button></div></section>
+  <section id="home-screen" class="fixed inset-0 z-[60] flex items-center justify-center text-white p-6"><div class="max-w-xl w-full text-center space-y-6"><div class="mx-auto w-20 h-20 rounded-3xl bg-blue-600 flex items-center justify-center"><i data-lucide="shield-check" class="w-11 h-11"></i></div><p class="text-blue-300 text-sm font-semibold tracking-widest">SAFE NIGHT ROUTE</p><h1 class="text-3xl md:text-5xl font-extrabold">안전한 귀가의 시작</h1><p class="text-slate-300">가로등과 CCTV 위치 데이터를 바탕으로 목적지 주변과 이동 경로를 확인하세요.</p><button onclick="enterApp()" class="w-full sm:w-auto px-10 py-4 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg">안전 지도 시작하기 <span aria-hidden="true">→</span></button></div></section>
   <aside id="menu-drawer" class="fixed inset-0 z-[55] hidden"><div class="absolute inset-0 bg-slate-950/50" onclick="toggleDrawer(false)"></div><div class="absolute right-0 top-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl p-5 flex flex-col gap-4"><div class="flex justify-between items-center"><h2 class="font-bold text-lg">메뉴</h2><button onclick="toggleDrawer(false)" class="p-2 rounded-lg hover:bg-slate-100" aria-label="닫기">✕</button></div><button onclick="showProfile()" class="text-left p-3 rounded-xl bg-slate-50 hover:bg-blue-50"><span class="font-semibold">나</span><span class="block text-xs text-slate-500 mt-1">내 이용 정보</span></button><section class="flex-1 min-h-0"><h3 class="font-bold mb-2">즐겨찾기</h3><div id="favorites-list" class="space-y-2 overflow-y-auto max-h-[70vh] text-sm text-slate-600">저장된 즐겨찾기가 없습니다.</div></section><p id="profile-info" class="text-xs text-slate-400">즐겨찾기는 이 브라우저에 저장됩니다.</p></div></aside>
 
   <!-- Out of Seoul Warning Modal -->
@@ -495,29 +501,37 @@
 
       clearKakaoLayers();
       const bounds = new kakao.maps.LatLngBounds();
-      const makeMarkers = (points, label) => points
+      const makeMarkers = (points, label, color, glyph) => points
         .filter(pt => pt[0] >= SEOUL_BOUNDS.minLat && pt[0] <= SEOUL_BOUNDS.maxLat &&
                       pt[1] >= SEOUL_BOUNDS.minLng && pt[1] <= SEOUL_BOUNDS.maxLng)
         .map(pt => {
           const position = new kakao.maps.LatLng(pt[0], pt[1]);
           bounds.extend(position);
-          return new kakao.maps.Marker({ position, title: label });
+          const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40"><path d="M16 1C7.7 1 1 7.7 1 16c0 10 15 23 15 23s15-13 15-23C31 7.7 24.3 1 16 1z" fill="' + color + '" stroke="#fff" stroke-width="2"/><text x="16" y="21" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">' + glyph + '</text></svg>';
+          const image = new kakao.maps.MarkerImage('data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg), new kakao.maps.Size(32, 40), { offset: new kakao.maps.Point(16, 39) });
+          return new kakao.maps.Marker({ position, title: label, image, clickable: false });
         });
 
-      const cctvMarkers = makeMarkers(cctvData, 'CCTV');
-      const lampMarkers = makeMarkers(lampData, '가로등');
+      const cctvMarkers = makeMarkers(cctvData, 'CCTV', '#2563eb', 'C');
+      const lampMarkers = makeMarkers(lampData, '가로등', '#f59e0b', 'L');
+      const clusterStyle = color => [{
+        width: '42px', height: '42px', background: color,
+        borderRadius: '50%', color: '#fff', textAlign: 'center',
+        fontWeight: 'bold', lineHeight: '42px', border: '3px solid #fff',
+        boxShadow: '0 2px 8px rgba(15,23,42,.35)'
+      }];
 
       if (cctvMarkers.length) {
         const clusterer = new kakao.maps.MarkerClusterer({
           map: kakaoMapObj, averageCenter: true, minLevel: 7,
-          disableClickZoom: false, markers: cctvMarkers
+          disableClickZoom: false, styles: clusterStyle('#2563eb'), markers: cctvMarkers
         });
         facilityClusterers.push(clusterer);
       }
       if (lampMarkers.length) {
         const clusterer = new kakao.maps.MarkerClusterer({
           map: kakaoMapObj, averageCenter: true, minLevel: 7,
-          disableClickZoom: false, markers: lampMarkers
+          disableClickZoom: false, styles: clusterStyle('#d97706'), markers: lampMarkers
         });
         facilityClusterers.push(clusterer);
       }
@@ -727,10 +741,13 @@
     async function decodeCSVFile(file) {
       const buffer = await file.arrayBuffer();
       const utf8Text = new TextDecoder('utf-8').decode(buffer);
-      const parseText = text => Papa.parse(text, {
-        header: true, skipEmptyLines: true, dynamicTyping: false
+      const parseText = text => new Promise((resolve, reject) => {
+        Papa.parse(text, {
+          header: true, skipEmptyLines: true, dynamicTyping: false,
+          worker: true, complete: resolve, error: reject
+        });
       });
-      const utf8Results = parseText(utf8Text);
+      const utf8Results = await parseText(utf8Text);
       const hasCoordinateHeaders = (utf8Results.meta.fields || []).some(header => {
         const normalized = normalizeHeader(header);
         return ['위도', 'wgs84위도', 'latitude', 'lat', 'y좌표', 'y',
@@ -741,7 +758,7 @@
 
       try {
         const cp949Text = new TextDecoder('euc-kr').decode(buffer);
-        const cp949Results = parseText(cp949Text);
+        const cp949Results = await parseText(cp949Text);
         const cp949HasCoordinates = (cp949Results.meta.fields || []).some(header => {
           const normalized = normalizeHeader(header);
           return ['위도', 'wgs84위도', 'latitude', 'lat', 'y좌표', 'y',
@@ -774,22 +791,49 @@
       const lampFile = document.getElementById('lamp-csv').files[0];
       const cctvFile = document.getElementById('cctv-csv').files[0];
       if (!lampFile && !cctvFile) { alert('업로드할 CSV 파일을 먼저 선택해 주세요.'); return; }
-      const reports = [];
-      if (lampFile) {
-        const result = await parseOneCSV(lampFile, 'lamp');
-        lampData = result.points;
-        reports.push('가로등 ' + result.points.length + '개' + (result.points.length ? '' : ' (위도·경도 열을 찾지 못함: ' + result.headers.join(', ') + ')'));
+      const applyButton = document.querySelector('#tab-data button[onclick="parseCSVFiles()"]');
+      if (applyButton) { applyButton.disabled = true; applyButton.textContent = '파일 분석 중...'; }
+      setKakaoStatus('CSV를 백그라운드에서 분석하고 있습니다...');
+      try {
+        const [lampResult, cctvResult] = await Promise.all([
+          lampFile ? parseOneCSV(lampFile, 'lamp') : Promise.resolve(null),
+          cctvFile ? parseOneCSV(cctvFile, 'cctv') : Promise.resolve(null)
+        ]);
+        const reports = [];
+        if (lampResult) { lampData = lampResult.points; reports.push('가로등 ' + lampData.length + '개'); }
+        if (cctvResult) { cctvData = cctvResult.points; reports.push('CCTV ' + cctvData.length + '대'); }
+        if (kakaoMapObj) {
+          const counts = showAllSeoulFacilities();
+          setKakaoStatus('서울시 전체 표시 · 가로등 ' + counts.visibleLamp + '개 / CCTV ' + counts.visibleCCTV + '대 (색상별 군집)');
+        }
+        alert('CSV 분석 완료\\n' + reports.join('\\n') + '\\n서울시 범위의 시설을 색상별 마커로 표시했습니다.');
+      } catch (error) {
+        console.error('CSV 반영 실패:', error);
+        setKakaoStatus('CSV 분석 중 오류가 발생했습니다. 파일 형식과 인코딩을 확인해 주세요.');
+        alert('CSV 분석 중 오류가 발생했습니다. 파일을 확인한 뒤 다시 시도해 주세요.');
+      } finally {
+        if (applyButton) { applyButton.disabled = false; applyButton.textContent = '사용자 CSV 파일 반영하기'; }
       }
-      if (cctvFile) {
-        const result = await parseOneCSV(cctvFile, 'cctv');
-        cctvData = result.points;
-        reports.push('CCTV ' + result.points.length + '대' + (result.points.length ? '' : ' (위도·경도 열을 찾지 못함: ' + result.headers.join(', ') + ')'));
-      }
+    }
+
+    function resetMapState() {
+      activeDestination = null;
+      lastSearchFavorite = null;
+      ['route-end', 'search-input'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.value = '';
+      });
+      ['route-result-container', 'search-result-container'].forEach(id => {
+        const panel = document.getElementById(id);
+        if (panel) panel.classList.add('hidden');
+      });
+      clearKakaoLayers();
       if (kakaoMapObj) {
-        const counts = showAllSeoulFacilities();
-        setKakaoStatus('서울시 전체 표시 · 가로등 ' + counts.visibleLamp + '개 / CCTV ' + counts.visibleCCTV + '대 (마커 군집 표시)');
+        kakaoMapObj.setCenter(new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]));
+        kakaoMapObj.setLevel(4);
+        renderKakaoMarkers(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1], 800);
       }
-      alert('CSV 분석 완료\\n' + reports.join('\\n') + '\\n서울시 좌표 범위의 업로드 시설을 지도 전체에 표시합니다. 마커가 겹치는 구간은 군집으로 묶여 표시됩니다.');
+      setKakaoStatus('검색 초기화 완료 · 한영외고 중심 화면');
     }
 
     function favoriteCurrentRoute() { if (!activeDestination) { alert('먼저 목적지를 검색하고 경로를 분석해 주세요.'); return; } saveFavorite('경로: ' + activeDestination.name, { type: 'route', name: activeDestination.name, coords: activeDestination.coords }); alert('즐겨찾기에 저장했습니다.'); }
