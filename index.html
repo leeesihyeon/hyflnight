@@ -36,7 +36,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <style>
-    #home-screen { background: linear-gradient(180deg, rgba(30,27,75,.28), rgba(30,27,75,.08)), url('assets/pixel-safe-night-background.svg') center / cover no-repeat; }
+    #home-screen { background: linear-gradient(180deg, rgba(30,27,75,.16), rgba(30,27,75,.04)), url('assets/home-cover.webp') center / cover no-repeat; }
     #home-screen::before { content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(39,31,87,.25),rgba(39,31,87,.04) 55%,rgba(25,35,50,.22)); pointer-events:none; }
     #home-screen > div { position:relative; z-index:1; text-shadow:0 2px 10px rgba(25,25,55,.28); }
     #kakao-map {
@@ -394,7 +394,7 @@
 
     lucide.createIcons();
 
-    function isInsideSeoul(lat, lng) { return Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180; }
+    function isInsideSeoul(lat, lng) { return Number.isFinite(lat) && Number.isFinite(lng) && lat >= SEOUL_BOUNDS.minLat && lat <= SEOUL_BOUNDS.maxLat && lng >= SEOUL_BOUNDS.minLng && lng <= SEOUL_BOUNDS.maxLng; }
 
     function getDistanceInMeters(lat1, lon1, lat2, lon2) {
       const R = 6371000;
@@ -496,52 +496,35 @@
     function showAllSeoulFacilities() {
       if (!kakaoMapObj || !window.kakao.maps.MarkerClusterer) {
         setKakaoStatus('지도 군집 표시 기능을 불러오지 못했습니다. 페이지를 새로고침해 주세요.');
-        return;
+        return { visibleCCTV: 0, visibleLamp: 0 };
       }
-
       clearKakaoLayers();
-      const bounds = new kakao.maps.LatLngBounds();
-      const makeMarkers = (points, label, color, glyph) => points
-        .filter(pt => pt[0] >= SEOUL_BOUNDS.minLat && pt[0] <= SEOUL_BOUNDS.maxLat &&
-                      pt[1] >= SEOUL_BOUNDS.minLng && pt[1] <= SEOUL_BOUNDS.maxLng)
+      const makeMarkers = (points, label, color) => points
+        .filter(pt => isInsideSeoul(pt[0], pt[1]))
         .map(pt => {
           const position = new kakao.maps.LatLng(pt[0], pt[1]);
-          bounds.extend(position);
-          const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40"><path d="M16 1C7.7 1 1 7.7 1 16c0 10 15 23 15 23s15-13 15-23C31 7.7 24.3 1 16 1z" fill="' + color + '" stroke="#fff" stroke-width="2"/><text x="16" y="21" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">' + glyph + '</text></svg>';
-          const image = new kakao.maps.MarkerImage('data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg), new kakao.maps.Size(32, 40), { offset: new kakao.maps.Point(16, 39) });
+          const dot = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.5" fill="' + color + '" stroke="#fff" stroke-width="1.2"/></svg>';
+          const image = new kakao.maps.MarkerImage('data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(dot), new kakao.maps.Size(10, 10), { offset: new kakao.maps.Point(5, 5) });
           return new kakao.maps.Marker({ position, title: label, image, clickable: false });
         });
-
-      const cctvMarkers = makeMarkers(cctvData, 'CCTV', '#2563eb', 'C');
-      const lampMarkers = makeMarkers(lampData, '가로등', '#f59e0b', 'L');
+      const cctvMarkers = makeMarkers(cctvData, 'CCTV', '#2563eb');
+      const lampMarkers = makeMarkers(lampData, '가로등', '#f59e0b');
       const clusterStyle = color => [{
-        width: '42px', height: '42px', background: color,
+        width: '24px', height: '24px', background: color, opacity: '.9',
         borderRadius: '50%', color: '#fff', textAlign: 'center',
-        fontWeight: 'bold', lineHeight: '42px', border: '3px solid #fff',
-        boxShadow: '0 2px 8px rgba(15,23,42,.35)'
+        fontSize: '10px', fontWeight: 'bold', lineHeight: '24px',
+        border: '1px solid #fff', boxShadow: '0 1px 4px rgba(15,23,42,.25)'
       }];
-
-      if (cctvMarkers.length) {
-        const clusterer = new kakao.maps.MarkerClusterer({
-          map: kakaoMapObj, averageCenter: true, minLevel: 7,
-          disableClickZoom: false, styles: clusterStyle('#2563eb'), markers: cctvMarkers
-        });
-        facilityClusterers.push(clusterer);
-      }
-      if (lampMarkers.length) {
-        const clusterer = new kakao.maps.MarkerClusterer({
-          map: kakaoMapObj, averageCenter: true, minLevel: 7,
-          disableClickZoom: false, styles: clusterStyle('#d97706'), markers: lampMarkers
-        });
-        facilityClusterers.push(clusterer);
-      }
-
-      if (!bounds.isEmpty()) {
-        kakaoMapObj.setBounds(bounds);
-      } else {
-        kakaoMapObj.setCenter(new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]));
-        kakaoMapObj.setLevel(8);
-      }
+      if (cctvMarkers.length) facilityClusterers.push(new kakao.maps.MarkerClusterer({
+        map: kakaoMapObj, averageCenter: true, minLevel: 5, disableClickZoom: false,
+        styles: clusterStyle('#2563eb'), markers: cctvMarkers
+      }));
+      if (lampMarkers.length) facilityClusterers.push(new kakao.maps.MarkerClusterer({
+        map: kakaoMapObj, averageCenter: true, minLevel: 5, disableClickZoom: false,
+        styles: clusterStyle('#d97706'), markers: lampMarkers
+      }));
+      kakaoMapObj.setCenter(new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]));
+      kakaoMapObj.setLevel(7);
       return { visibleCCTV: cctvMarkers.length, visibleLamp: lampMarkers.length };
     }
 
@@ -576,13 +559,22 @@
             const container = document.getElementById('kakao-map');
             kakaoMapObj = new kakao.maps.Map(container, {
               center: new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]),
-              level: 4
+              level: 7,
+              minLevel: 1,
+              maxLevel: 8
             });
 
             kakaoPlaces = new kakao.maps.services.Places();
             kakaoGeocoder = new kakao.maps.services.Geocoder();
-            renderKakaoMarkers(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1], 800);
-            setKakaoStatus('카카오 지도 준비 완료! (한영외고 중심)');
+            loadSavedFacilityData();
+            if (lampData.length || cctvData.length) {
+              const counts = showAllSeoulFacilities();
+              setKakaoStatus('저장된 데이터 자동 반영 · 가로등 ' + counts.visibleLamp + '개 / CCTV ' + counts.visibleCCTV + '대');
+            } else {
+              kakaoMapObj.setCenter(new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]));
+              kakaoMapObj.setLevel(7);
+              setKakaoStatus('카카오 지도 준비 완료 · CSV를 한 번 등록하면 다음 방문부터 자동 반영됩니다.');
+            }
           } catch(e) {
             setKakaoStatus('카카오 지도 초기화 중 오류가 발생했습니다.');
           }
@@ -800,8 +792,9 @@
           cctvFile ? parseOneCSV(cctvFile, 'cctv') : Promise.resolve(null)
         ]);
         const reports = [];
-        if (lampResult) { lampData = lampResult.points; reports.push('가로등 ' + lampData.length + '개'); }
-        if (cctvResult) { cctvData = cctvResult.points; reports.push('CCTV ' + cctvData.length + '대'); }
+        if (lampResult) { lampData = lampResult.points.filter(pt => isInsideSeoul(pt[0], pt[1])); reports.push('가로등 ' + lampData.length + '개'); }
+        if (cctvResult) { cctvData = cctvResult.points.filter(pt => isInsideSeoul(pt[0], pt[1])); reports.push('CCTV ' + cctvData.length + '대'); }
+        saveFacilityData();
         if (kakaoMapObj) {
           const counts = showAllSeoulFacilities();
           setKakaoStatus('서울시 전체 표시 · 가로등 ' + counts.visibleLamp + '개 / CCTV ' + counts.visibleCCTV + '대 (색상별 군집)');
@@ -814,6 +807,20 @@
       } finally {
         if (applyButton) { applyButton.disabled = false; applyButton.textContent = '사용자 CSV 파일 반영하기'; }
       }
+    }
+
+    function saveFacilityData() {
+      try { localStorage.setItem('hyflnight-facilities-v1', JSON.stringify({ lamp: lampData, cctv: cctvData })); }
+      catch (error) { console.warn('시설 데이터 저장 공간 부족:', error); setKakaoStatus('데이터는 이번 방문에 반영됐지만 브라우저 저장 공간이 부족해 자동 저장하지 못했습니다.'); }
+    }
+    function loadSavedFacilityData() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('hyflnight-facilities-v1') || 'null');
+        if (saved) {
+          lampData = Array.isArray(saved.lamp) ? saved.lamp.filter(pt => Array.isArray(pt) && isInsideSeoul(Number(pt[0]), Number(pt[1]))) : [];
+          cctvData = Array.isArray(saved.cctv) ? saved.cctv.filter(pt => Array.isArray(pt) && isInsideSeoul(Number(pt[0]), Number(pt[1]))) : [];
+        }
+      } catch (error) { console.warn('저장된 시설 데이터 읽기 실패:', error); }
     }
 
     function resetMapState() {
@@ -830,8 +837,9 @@
       clearKakaoLayers();
       if (kakaoMapObj) {
         kakaoMapObj.setCenter(new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]));
-        kakaoMapObj.setLevel(4);
-        renderKakaoMarkers(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1], 800);
+        kakaoMapObj.setLevel(7);
+        if (lampData.length || cctvData.length) showAllSeoulFacilities();
+        else renderKakaoMarkers(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1], 800);
       }
       setKakaoStatus('검색 초기화 완료 · 한영외고 중심 화면');
     }
