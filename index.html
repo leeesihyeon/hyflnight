@@ -335,7 +335,22 @@
 
   </div>
 
-  <section id="home-screen" class="fixed inset-0 z-[60] flex items-center justify-center text-white p-6"><div class="max-w-xl w-full text-center space-y-6"><div class="mx-auto w-20 h-20 rounded-3xl bg-blue-600 flex items-center justify-center"><i data-lucide="shield-check" class="w-11 h-11"></i></div><p class="text-blue-300 text-sm font-semibold tracking-widest">SAFE NIGHT ROUTE</p><h1 class="text-3xl md:text-5xl font-extrabold">안전한 귀가의 시작</h1><p class="text-slate-300">가로등과 CCTV 위치 데이터를 바탕으로 목적지 주변과 이동 경로를 확인하세요.</p><button onclick="enterApp()" class="w-full sm:w-auto px-10 py-4 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg">안전 지도 시작하기 <span aria-hidden="true">→</span></button></div></section>
+  <section id="home-screen" class="fixed inset-0 z-[60] flex items-center justify-center text-white p-6">
+    <div class="max-w-xl w-full text-center space-y-5">
+      <div class="mx-auto w-20 h-20 rounded-3xl bg-blue-600 flex items-center justify-center"><i data-lucide="shield-check" class="w-11 h-11"></i></div>
+      <p class="text-blue-100 text-sm font-semibold tracking-widest">SAFE NIGHT ROUTE</p>
+      <h1 class="text-3xl md:text-5xl font-extrabold">안전한 귀가의 시작</h1>
+      <p class="text-white/90">가로등과 CCTV 위치 데이터를 바탕으로 목적지 주변과 이동 경로를 확인하세요.</p>
+      <button onclick="enterApp()" class="w-full sm:w-auto px-10 py-4 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg">안전 지도 시작하기 <span aria-hidden="true">→</span></button>
+      <div class="pt-1 flex flex-col items-center gap-2">
+        <button id="cover-music-button" type="button" onclick="toggleCoverMusic()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/70 bg-slate-950/30 hover:bg-slate-950/50 text-sm font-semibold">
+          <span id="cover-music-icon" aria-hidden="true">▶</span><span id="cover-music-label">배경음악 재생</span>
+        </button>
+        <p id="cover-music-status" class="text-xs text-white/80" aria-live="polite">원할 때 버튼을 눌러 배경음악을 재생하세요.</p>
+      </div>
+    </div>
+  </section>
+  <audio id="cover-music" src="background-music.mp3" preload="none" loop></audio>
   <aside id="menu-drawer" class="fixed inset-0 z-[55] hidden"><div class="absolute inset-0 bg-slate-950/50" onclick="toggleDrawer(false)"></div><div class="absolute right-0 top-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl p-5 flex flex-col gap-4"><div class="flex justify-between items-center"><h2 class="font-bold text-lg">메뉴</h2><button onclick="toggleDrawer(false)" class="p-2 rounded-lg hover:bg-slate-100" aria-label="닫기">✕</button></div><button onclick="showProfile()" class="text-left p-3 rounded-xl bg-slate-50 hover:bg-blue-50"><span class="font-semibold">나</span><span class="block text-xs text-slate-500 mt-1">내 이용 정보</span></button><section class="flex-1 min-h-0"><h3 class="font-bold mb-2">즐겨찾기</h3><div id="favorites-list" class="space-y-2 overflow-y-auto max-h-[70vh] text-sm text-slate-600">저장된 즐겨찾기가 없습니다.</div></section><p id="profile-info" class="text-xs text-slate-400">즐겨찾기는 이 브라우저에 저장됩니다.</p></div></aside>
 
   <!-- Out of Seoul Warning Modal -->
@@ -361,6 +376,34 @@
 
   <!-- JavaScript Logic -->
   <script>
+    // 표지 배경음악은 브라우저 자동재생 정책에 맞춰 사용자 버튼을 눌렀을 때 시작한다.
+    async function toggleCoverMusic() {
+      const audio = document.getElementById('cover-music');
+      const button = document.getElementById('cover-music-button');
+      const icon = document.getElementById('cover-music-icon');
+      const label = document.getElementById('cover-music-label');
+      const status = document.getElementById('cover-music-status');
+      if (!audio) return;
+      if (audio.paused) {
+        try {
+          await audio.play();
+          icon.textContent = 'Ⅱ';
+          label.textContent = '배경음악 일시정지';
+          status.textContent = '배경음악이 재생 중입니다.';
+          button.setAttribute('aria-pressed', 'true');
+        } catch (error) {
+          console.warn('배경음악 재생 실패:', error);
+          status.textContent = '음악 파일을 찾을 수 없습니다. 저장소 최상위에 background-music.mp3를 업로드해 주세요.';
+        }
+      } else {
+        audio.pause();
+        icon.textContent = '▶';
+        label.textContent = '배경음악 재생';
+        status.textContent = '배경음악이 일시정지되었습니다.';
+        button.setAttribute('aria-pressed', 'false');
+      }
+    }
+
     // 1. 변수 선언 (ReferenceError 방지)
     const javascriptKey = '215f413e616fa03fbeb581622e3e7587';
     let kakaoMapObj = null;
