@@ -257,7 +257,7 @@
         <div id="tab-data" class="space-y-4 hidden">
           <div class="bg-blue-50 border border-blue-200 rounded-xl p-3.5 text-xs text-blue-900 flex gap-2">
             <i data-lucide="info" class="w-4 h-4 text-blue-600 shrink-0 mt-0.5"></i>
-            <span>CSV의 좌표 열을 자동 인식해 서울시 범위만 반영합니다. 한 번 등록한 데이터는 이 브라우저에 저장되어 다음 방문부터 자동으로 불러옵니다.</span>
+            <span>서울시 가로등·CCTV 기본 데이터는 앱 실행 시 저장소에서 자동으로 불러옵니다. 필요하면 아래에서 별도 CSV로 갱신할 수 있습니다.</span>
           </div>
 
           <div class="space-y-3 text-xs">
@@ -283,11 +283,11 @@
       <footer class="p-4 bg-slate-50 border-t border-slate-200 text-[11px] text-slate-500 space-y-2 shrink-0">
         <div class="flex items-center justify-between font-semibold text-slate-700">
           <span>데이터 출처 및 기준</span>
-          <span class="text-blue-600">저장 데이터 기준</span>
+          <span class="text-blue-600">GitHub 기본 데이터 자동 로드</span>
         </div>
         <ul class="space-y-1 list-disc pl-3 text-[10px]">
-          <li>가로등: 서울시 CSV 좌표 (브라우저 자동 저장)</li>
-          <li>CCTV: 서울시 CSV 좌표 (브라우저 자동 저장)</li>
+          <li>가로등: 저장소 CSV 자동 로드</li>
+          <li>CCTV: 저장소 CSV 자동 로드</li>
           <li>지도: Kakao Maps SDK</li>
         </ul>
         <div class="pt-2 border-t border-slate-200 text-[10px] text-slate-400 flex justify-between">
@@ -503,16 +503,16 @@
         .filter(pt => isInsideSeoul(pt[0], pt[1]))
         .map(pt => {
           const position = new kakao.maps.LatLng(pt[0], pt[1]);
-          const dot = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.5" fill="' + color + '" stroke="#fff" stroke-width="1.2"/></svg>';
-          const image = new kakao.maps.MarkerImage('data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(dot), new kakao.maps.Size(10, 10), { offset: new kakao.maps.Point(5, 5) });
+          const dot = '<svg xmlns="http://www.w3.org/2000/svg" width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="2.5" fill="' + color + '" stroke="#fff" stroke-width="1.2"/></svg>';
+          const image = new kakao.maps.MarkerImage('data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(dot), new kakao.maps.Size(7, 7), { offset: new kakao.maps.Point(3.5, 3.5) });
           return new kakao.maps.Marker({ position, title: label, image, clickable: false });
         });
       const cctvMarkers = makeMarkers(cctvData, 'CCTV', '#2563eb');
       const lampMarkers = makeMarkers(lampData, '가로등', '#f59e0b');
       const clusterStyle = color => [{
-        width: '24px', height: '24px', background: color, opacity: '.9',
+        width: '20px', height: '20px', background: color, opacity: '.9',
         borderRadius: '50%', color: '#fff', textAlign: 'center',
-        fontSize: '10px', fontWeight: 'bold', lineHeight: '24px',
+        fontSize: '9px', fontWeight: 'bold', lineHeight: '20px',
         border: '1px solid #fff', boxShadow: '0 1px 4px rgba(15,23,42,.25)'
       }];
       if (cctvMarkers.length) facilityClusterers.push(new kakao.maps.MarkerClusterer({
@@ -554,26 +554,33 @@
           return;
         }
         
-        window.kakao.maps.load(function() {
+        window.kakao.maps.load(async function() {
           try {
             const container = document.getElementById('kakao-map');
             kakaoMapObj = new kakao.maps.Map(container, {
               center: new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]),
               level: 7,
               minLevel: 1,
-              maxLevel: 8
+              maxLevel: 7
             });
 
             kakaoPlaces = new kakao.maps.services.Places();
             kakaoGeocoder = new kakao.maps.services.Geocoder();
             loadSavedFacilityData();
-            if (lampData.length || cctvData.length) {
+            try {
+              await loadBundledFacilityData();
               const counts = showAllSeoulFacilities();
-              setKakaoStatus('저장된 데이터 자동 반영 · 가로등 ' + counts.visibleLamp + '개 / CCTV ' + counts.visibleCCTV + '대');
-            } else {
-              kakaoMapObj.setCenter(new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]));
-              kakaoMapObj.setLevel(7);
-              setKakaoStatus('카카오 지도 준비 완료 · CSV를 한 번 등록하면 다음 방문부터 자동 반영됩니다.');
+              setKakaoStatus('서울시 기본 데이터 자동 반영 · 가로등 ' + counts.visibleLamp + '개 / CCTV ' + counts.visibleCCTV + '개 위치');
+            } catch (dataError) {
+              console.warn('저장소 CSV 자동 로드 실패:', dataError);
+              if (lampData.length || cctvData.length) {
+                const counts = showAllSeoulFacilities();
+                setKakaoStatus('브라우저 저장 데이터 표시 · 가로등 ' + counts.visibleLamp + '개 / CCTV ' + counts.visibleCCTV + '개 위치');
+              } else {
+                kakaoMapObj.setCenter(new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]));
+                kakaoMapObj.setLevel(7);
+                setKakaoStatus('기본 CSV 파일을 불러오지 못했습니다. data 폴더 파일 경로를 확인해 주세요.');
+              }
             }
           } catch(e) {
             setKakaoStatus('카카오 지도 초기화 중 오류가 발생했습니다.');
@@ -807,6 +814,33 @@
       } finally {
         if (applyButton) { applyButton.disabled = false; applyButton.textContent = '사용자 CSV 파일 반영하기'; }
       }
+    }
+
+    // 저장소에 포함된 정규화 UTF-8 CSV를 앱 실행 시 자동으로 가져온다.
+    async function loadBundledCSV(path) {
+      const response = await fetch(path, { cache: 'force-cache' });
+      if (!response.ok) throw new Error('CSV fetch failed: ' + path + ' (' + response.status + ')');
+      const csvText = await response.text();
+      const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true, dynamicTyping: false });
+      const points = [];
+      (parsed.data || []).forEach(row => {
+        const lat = Number(row.latitude);
+        const lng = Number(row.longitude);
+        if (isInsideSeoul(lat, lng)) points.push([lat, lng]);
+      });
+      if (!points.length) throw new Error('CSV has no valid Seoul coordinates: ' + path);
+      return points;
+    }
+
+    async function loadBundledFacilityData() {
+      const [lamps, cameras] = await Promise.all([
+        loadBundledCSV('data/streetlights.csv'),
+        loadBundledCSV('data/cctv.csv')
+      ]);
+      lampData = lamps;
+      cctvData = cameras;
+      saveFacilityData();
+      return { lamp: lamps.length, cctv: cameras.length };
     }
 
     function saveFacilityData() {
