@@ -951,7 +951,12 @@
       document.getElementById('home-screen').classList.add('hidden');
       document.getElementById('app-header').style.display = 'flex';
       document.getElementById('app-main').style.display = 'flex';
-      if (kakaoMapObj) kakaoMapObj.relayout();
+      if (kakaoMapObj) {
+        // 표지에서 메인으로 진입하면 한영외고를 중심으로 지도 위치와 확대 수준을 고정한다.
+        kakaoMapObj.relayout();
+        kakaoMapObj.setCenter(new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]));
+        kakaoMapObj.setLevel(5);
+      }
     }
     function toggleDrawer(open) {
       document.getElementById('menu-drawer').classList.toggle('hidden', !open);
