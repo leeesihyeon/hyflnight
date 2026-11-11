@@ -345,69 +345,41 @@
   </div>
 
   <section id="home-screen" class="fixed inset-0 z-[60] text-white">
+    <button id="cover-music-button" type="button" onclick="toggleCoverMusic()" aria-label="배경음악 재생" aria-pressed="false" class="fixed top-5 right-5 z-[70] w-12 h-12 rounded-full border border-white/80 bg-slate-950/35 hover:bg-slate-950/60 shadow-lg flex items-center justify-center text-white text-xl">
+      <span id="cover-music-icon" aria-hidden="true">▶</span><span id="cover-music-label" class="sr-only">배경음악 재생</span>
+    </button>
     <div class="cover-hero w-full text-center">
-      <div class="max-w-2xl w-full space-y-5 cover-rise">
-        <div class="mx-auto w-20 h-20 rounded-3xl bg-blue-600 flex items-center justify-center shadow-xl"><i data-lucide="shield-check" class="w-11 h-11"></i></div>
-        <p class="text-blue-100 text-sm font-semibold tracking-widest">SAFE NIGHT ROUTE</p>
-        <h1 class="text-3xl md:text-5xl font-extrabold">안전한 귀가의 시작</h1>
-        <p class="text-white/95 text-sm md:text-base">가로등과 CCTV 위치 데이터로 목적지 주변과 이동 경로를 확인하세요.</p>
-        <button onclick="enterApp()" class="w-full sm:w-auto px-10 py-4 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg transition hover:-translate-y-0.5">안전 지도 시작하기 <span aria-hidden="true">→</span></button>
-        <div class="pt-1 flex flex-col items-center gap-2">
-          <button id="cover-music-button" type="button" onclick="toggleCoverMusic()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/70 bg-slate-950/30 hover:bg-slate-950/50 text-sm font-semibold">
-            <span id="cover-music-icon" aria-hidden="true">▶</span><span id="cover-music-label">배경음악 재생</span>
-          </button>
-          <p id="cover-music-status" class="text-xs text-white/80" aria-live="polite">원할 때 버튼을 눌러 배경음악을 재생하세요.</p>
-        </div>
-        <div class="pt-5 text-xs text-white/90 animate-bounce">아래로 스크롤해 범죄 통계 확인하기 ↓</div>
-      </div>
+      <h1 class="text-3xl md:text-5xl font-extrabold cover-rise">안전한 귀가의 시작</h1>
     </div>
 
     <div class="w-full max-w-5xl mx-auto px-4 pb-16 md:pb-20">
       <section class="cover-stat-panel rounded-3xl p-5 md:p-8 cover-reveal">
-        <div class="text-center mb-7">
-          <p class="text-xs md:text-sm font-bold tracking-[.22em] text-amber-200">2024 CRIME STATISTICS</p>
-          <h2 class="text-2xl md:text-3xl font-extrabold mt-2">밤길 안전, 통계로 확인하기</h2>
-          <p class="text-sm text-white/80 mt-2">범죄가 많이 발생한 시간대와 장소를 비교했습니다.</p>
-        </div>
-        <div class="grid md:grid-cols-2 gap-5">
+        <h2 class="text-2xl md:text-3xl font-extrabold text-center mb-8">범죄가 가장 많이 발생한 시간과 장소는?</h2>
+        <div class="grid md:grid-cols-2 gap-6">
           <article class="rounded-2xl bg-white/10 p-4 md:p-5">
-            <div class="flex items-center justify-between gap-3 mb-4">
-              <div><p class="text-xs text-amber-200 font-bold">시간대별 범죄 발생</p><h3 class="text-lg font-extrabold mt-1">시간대 순위</h3></div>
-              <div class="text-right"><strong class="text-3xl text-amber-200">1위</strong><p class="text-xs text-white/75">21~23시</p></div>
+            <h3 class="text-lg font-extrabold text-amber-100 text-center mb-5">시간별 범죄 발생</h3>
+            <div class="h-64 flex items-end justify-around gap-3 border-b border-white/30 px-2">
+              <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">107,733</strong><div class="w-full max-w-12 rounded-t-md bg-amber-300" style="height:100%"></div><span class="text-[10px] text-center">21~23시<br/>1위</span></div>
+              <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">89,810</strong><div class="w-full max-w-12 rounded-t-md bg-white/75" style="height:83.4%"></div><span class="text-[10px] text-center">18~20시<br/>2위</span></div>
+              <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">83,102</strong><div class="w-full max-w-12 rounded-t-md bg-white/65" style="height:77.1%"></div><span class="text-[10px] text-center">15~17시<br/>3위</span></div>
             </div>
-            <div class="space-y-4 text-sm">
-              <div><div class="flex justify-between mb-1"><span class="font-bold text-amber-100">1위 · 21:00~23:59</span><strong>107,733건</strong></div><div class="cover-bar-track"><div class="cover-bar-fill bg-amber-300" style="width:100%"></div></div></div>
-              <div><div class="flex justify-between mb-1"><span>2위 · 18:00~20:59</span><strong>89,810건</strong></div><div class="cover-bar-track"><div class="cover-bar-fill bg-white/75" style="width:83.4%"></div></div></div>
-              <div><div class="flex justify-between mb-1"><span>3위 · 15:00~17:59</span><strong>83,102건</strong></div><div class="cover-bar-track"><div class="cover-bar-fill bg-white/65" style="width:77.1%"></div></div></div>
-              <div class="pt-2 border-t border-white/20"><div class="flex justify-between mb-1"><span class="text-white/85">6위 · 00:00~02:59</span><strong>47,554건</strong></div><div class="cover-bar-track"><div class="cover-bar-fill bg-sky-300" style="width:44.2%"></div></div></div>
-            </div>
-            <p class="text-xs leading-relaxed text-white/70 mt-4">※ 통계는 3시간 단위입니다. 22:00~01:00만의 별도 순위는 산출할 수 없어 인접한 시간 구간의 순위를 표시했습니다.</p>
           </article>
           <article class="rounded-2xl bg-white/10 p-4 md:p-5">
-            <div class="flex items-center justify-between gap-3 mb-4">
-              <div><p class="text-xs text-sky-200 font-bold">발생 장소별 범죄</p><h3 class="text-lg font-extrabold mt-1">거리 범죄 순위</h3></div>
-              <div class="text-right"><strong class="text-3xl text-sky-200">2위</strong><p class="text-xs text-white/75">노상</p></div>
+            <h3 class="text-lg font-extrabold text-sky-100 text-center mb-5">장소별 범죄 발생</h3>
+            <div class="h-64 flex items-end justify-around gap-3 border-b border-white/30 px-2">
+              <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">154,956</strong><div class="w-full max-w-12 rounded-t-md bg-white/75" style="height:100%"></div><span class="text-[10px] text-center">기타<br/>1위</span></div>
+              <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">114,939</strong><div class="w-full max-w-12 rounded-t-md bg-sky-300" style="height:74.2%"></div><span class="text-[10px] text-center">노상<br/>2위</span></div>
+              <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">66,170</strong><div class="w-full max-w-12 rounded-t-md bg-white/65" style="height:42.7%"></div><span class="text-[10px] text-center">주거<br/>3위</span></div>
+              <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">53,740</strong><div class="w-full max-w-12 rounded-t-md bg-white/55" style="height:34.7%"></div><span class="text-[10px] text-center">상점<br/>4위</span></div>
             </div>
-            <div class="space-y-4 text-sm">
-              <div><div class="flex justify-between mb-1"><span>1위 · 기타</span><strong>154,956건</strong></div><div class="cover-bar-track"><div class="cover-bar-fill bg-white/75" style="width:100%"></div></div></div>
-              <div><div class="flex justify-between mb-1"><span class="font-bold text-sky-100">2위 · 노상(거리·도로)</span><strong>114,939건</strong></div><div class="cover-bar-track"><div class="cover-bar-fill bg-sky-300" style="width:74.2%"></div></div></div>
-              <div><div class="flex justify-between mb-1"><span>3위 · 아파트·연립·다세대</span><strong>66,170건</strong></div><div class="cover-bar-track"><div class="cover-bar-fill bg-white/65" style="width:42.7%"></div></div></div>
-              <div><div class="flex justify-between mb-1"><span>4위 · 상점</span><strong>53,740건</strong></div><div class="cover-bar-track"><div class="cover-bar-fill bg-white/55" style="width:34.7%"></div></div></div>
-            </div>
-            <p class="text-xs leading-relaxed text-white/70 mt-4">※ '노상'은 거리·도로 등 통계 분류이며, 인도만을 따로 집계한 수치는 아닙니다. '기타'를 포함한 전체 장소 중 2위입니다.</p>
           </article>
         </div>
-        <div class="mt-6 rounded-2xl border border-white/20 bg-slate-950/25 p-4">
-          <p class="font-bold text-sm text-amber-100">통계 해석 안내</p>
-          <p class="text-xs md:text-sm text-white/80 leading-relaxed mt-2">시간대별 통계(총 664,914건)와 장소별 통계(총 513,205건)는 집계 항목과 기준이 서로 다르므로 두 총계를 직접 비교하지 않았습니다. 이 자료는 2024년 전국 집계이며 특정 지역의 현재 위험도를 뜻하지 않습니다.</p>
-          <p class="text-xs text-white/65 mt-3">출처: KOSIS 국가통계포털 · 범죄발생 시간 / 범죄발생 장소 · 2024년</p>
-          <div class="flex flex-wrap gap-4 mt-2 text-xs">
-            <a class="underline text-sky-200 hover:text-white" href="https://kosis.kr/statHtml/statHtml.do?orgId=135&tblId=TX_13501_A037A" target="_blank" rel="noopener">시간 통계 원문</a>
-            <a class="underline text-sky-200 hover:text-white" href="https://kosis.kr/statHtml/statHtml.do?orgId=135&tblId=TX_13501_A052" target="_blank" rel="noopener">장소 통계 원문</a>
-          </div>
+        <p class="text-xs text-white/75 text-center mt-6">출처: KOSIS 국가통계포털 · 범죄발생 시간 / 범죄발생 장소 · 2024년</p>
+        <div class="flex justify-center gap-5 mt-2 text-xs">
+          <a class="underline text-sky-200 hover:text-white" href="https://kosis.kr/statHtml/statHtml.do?orgId=135&tblId=TX_13501_A037A" target="_blank" rel="noopener">시간 통계</a>
+          <a class="underline text-sky-200 hover:text-white" href="https://kosis.kr/statHtml/statHtml.do?orgId=135&tblId=TX_13501_A052" target="_blank" rel="noopener">장소 통계</a>
         </div>
       </section>
-      <p class="cover-reveal text-center text-xs text-white/85 mt-5">SAFE NIGHT ROUTE · 안전한 귀가를 위한 위치 정보</p>
     </div>
   </section>
   <audio id="cover-music" src="background-music.mp3" preload="none" loop></audio>
@@ -461,24 +433,25 @@
       const button = document.getElementById('cover-music-button');
       const icon = document.getElementById('cover-music-icon');
       const label = document.getElementById('cover-music-label');
-      const status = document.getElementById('cover-music-status');
       if (!audio) return;
       if (audio.paused) {
         try {
           await audio.play();
           icon.textContent = 'Ⅱ';
           label.textContent = '배경음악 일시정지';
-          status.textContent = '배경음악이 재생 중입니다.';
+          button.setAttribute('aria-label', '배경음악 일시정지');
+          label.textContent = '배경음악 일시정지';
           button.setAttribute('aria-pressed', 'true');
         } catch (error) {
           console.warn('배경음악 재생 실패:', error);
-          status.textContent = '음악 파일을 찾을 수 없습니다. 저장소 최상위에 background-music.mp3를 업로드해 주세요.';
+          button.setAttribute('aria-label', '배경음악 파일을 찾을 수 없습니다');
         }
       } else {
         audio.pause();
         icon.textContent = '▶';
         label.textContent = '배경음악 재생';
-        status.textContent = '배경음악이 일시정지되었습니다.';
+        button.setAttribute('aria-label', '배경음악 재생');
+        label.textContent = '배경음악 재생';
         button.setAttribute('aria-pressed', 'false');
       }
     }
