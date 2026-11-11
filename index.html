@@ -42,6 +42,11 @@
     .cover-hero { min-height:100svh; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:3rem 1.25rem; }
     .cover-rise { animation:coverRise .9s cubic-bezier(.2,.75,.25,1) both; }
     @keyframes coverRise { from {opacity:0;transform:translateY(42px)} to {opacity:1;transform:translateY(0)} }
+    .cover-scroll-cue { opacity:0; animation:coverArrowFade .8s ease 1s forwards; }
+    @keyframes coverArrowFade { from {opacity:0;transform:translateY(-8px)} to {opacity:.9;transform:translateY(0)} }
+    .cover-rank { display:block; margin-top:5px; font-size:1.25rem; line-height:1.2; font-weight:900; letter-spacing:-.03em; }
+    .cover-start-button { display:inline-flex; align-items:center; justify-content:center; min-width:190px; padding:14px 34px; border-radius:999px; background:#fff; color:#1e3a8a; font-size:14px; font-weight:800; box-shadow:0 12px 30px rgba(15,23,42,.25); transition:transform .2s ease,box-shadow .2s ease; }
+    .cover-start-button:hover { transform:translateY(-2px); box-shadow:0 16px 36px rgba(15,23,42,.32); }
     .cover-reveal { opacity:0; transform:translateY(44px); transition:opacity .75s ease,transform .75s cubic-bezier(.2,.75,.25,1); }
     .cover-reveal.is-visible { opacity:1; transform:translateY(0); }
     .cover-stat-panel { background:rgba(20,24,52,.76); border:1px solid rgba(255,255,255,.28); backdrop-filter:blur(14px); box-shadow:0 20px 60px rgba(15,23,42,.24); }
@@ -74,32 +79,12 @@
 <body class="bg-slate-900 font-sans text-slate-800 antialiased flex flex-col h-screen overflow-hidden">
 
   <!-- Header -->
-  <header id="app-header" style="display:none" class="bg-brand-950 text-white border-b border-brand-800 px-6 py-4 flex flex-wrap items-center justify-between z-10 shadow-lg shrink-0">
-    <div class="flex items-center space-x-3">
-      <div class="bg-blue-600 p-2.5 rounded-xl shadow-md">
-        <i data-lucide="shield-check" class="w-6 h-6 text-white"></i>
-      </div>
-      <div>
-        <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-          한영외고 심야 안전 귀가길
-          <span class="text-xs font-normal bg-blue-900/80 text-blue-200 px-2.5 py-0.5 rounded-full border border-blue-700">야간자율학습(22시~01시)</span>
-        </h1>
-        <p class="text-xs text-slate-400">가로등·CCTV 위치 데이터 기반 안전 길안내</p>
-      </div>
+  <header id="app-header" style="display:none" class="bg-brand-950 text-white border-b border-brand-800 px-6 py-4 flex items-center justify-between z-10 shadow-lg shrink-0">
+    <div class="flex items-baseline gap-3 min-w-0">
+      <h1 class="text-xl md:text-2xl font-semibold tracking-tight text-white whitespace-nowrap">집가장</h1>
+      <span class="text-sm md:text-base font-medium text-white/55 truncate">한영외고 안심 귀갓길</span>
     </div>
-    
-    <button onclick="toggleDrawer(true)" aria-label="메뉴 열기" class="ml-auto mr-3 p-2 rounded-lg hover:bg-blue-900"><i data-lucide="menu" class="w-6 h-6"></i></button>
-    <!-- Info Badge -->
-    <div class="hidden md:flex items-center gap-4 text-xs text-slate-300">
-      <div class="flex items-center gap-1.5 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
-        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-blue-400"></i>
-        <span>사용자: <b>한영외고 학생들</b></span>
-      </div>
-      <div class="flex items-center gap-1.5 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
-        <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
-        <span>카카오 지도 기반 <b>통합 완료</b></span>
-      </div>
-    </div>
+    <button onclick="toggleDrawer(true)" aria-label="메뉴 열기" class="ml-auto p-2 rounded-lg hover:bg-blue-900 shrink-0"><i data-lucide="menu" class="w-6 h-6"></i></button>
   </header>
 
   <!-- Main Content Layout -->
@@ -350,6 +335,10 @@
     </button>
     <div class="cover-hero w-full text-center">
       <h1 class="text-3xl md:text-5xl font-extrabold cover-rise">안전한 귀가의 시작</h1>
+      <div class="cover-scroll-cue mt-10 flex flex-col items-center gap-2" aria-hidden="true">
+        <span class="text-[10px] tracking-[0.22em] text-white/85">SCROLL</span>
+        <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
     </div>
 
     <div class="w-full max-w-5xl mx-auto px-4 pb-16 md:pb-20">
@@ -359,7 +348,7 @@
           <article class="rounded-2xl bg-white/10 p-4 md:p-5">
             <h3 class="text-lg font-extrabold text-amber-100 text-center mb-5">시간별 범죄 발생</h3>
             <div class="h-64 flex items-end justify-around gap-3 border-b border-white/30 px-2">
-              <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">107,733</strong><div class="w-full max-w-12 rounded-t-md bg-amber-300" style="height:100%"></div><span class="text-[10px] text-center">21~23시<br/>1위</span></div>
+              <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">107,733</strong><div class="w-full max-w-12 rounded-t-md bg-amber-300" style="height:100%"></div><span class="text-[10px] text-center">21~23시</span><strong class="cover-rank text-amber-300">1위</strong></div>
               <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">89,810</strong><div class="w-full max-w-12 rounded-t-md bg-white/75" style="height:83.4%"></div><span class="text-[10px] text-center">18~20시<br/>2위</span></div>
               <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">83,102</strong><div class="w-full max-w-12 rounded-t-md bg-white/65" style="height:77.1%"></div><span class="text-[10px] text-center">15~17시<br/>3위</span></div>
             </div>
@@ -368,7 +357,7 @@
             <h3 class="text-lg font-extrabold text-sky-100 text-center mb-5">장소별 범죄 발생</h3>
             <div class="h-64 flex items-end justify-around gap-3 border-b border-white/30 px-2">
               <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">154,956</strong><div class="w-full max-w-12 rounded-t-md bg-white/75" style="height:100%"></div><span class="text-[10px] text-center">기타<br/>1위</span></div>
-              <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">114,939</strong><div class="w-full max-w-12 rounded-t-md bg-sky-300" style="height:74.2%"></div><span class="text-[10px] text-center">노상<br/>2위</span></div>
+              <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">114,939</strong><div class="w-full max-w-12 rounded-t-md bg-sky-300" style="height:74.2%"></div><span class="text-[10px] text-center">노상</span><strong class="cover-rank text-sky-300">2위</strong></div>
               <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">66,170</strong><div class="w-full max-w-12 rounded-t-md bg-white/65" style="height:42.7%"></div><span class="text-[10px] text-center">주거<br/>3위</span></div>
               <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">53,740</strong><div class="w-full max-w-12 rounded-t-md bg-white/55" style="height:34.7%"></div><span class="text-[10px] text-center">상점<br/>4위</span></div>
             </div>
@@ -380,6 +369,9 @@
           <a class="underline text-sky-200 hover:text-white" href="https://kosis.kr/statHtml/statHtml.do?orgId=135&tblId=TX_13501_A052" target="_blank" rel="noopener">장소 통계</a>
         </div>
       </section>
+      <div class="flex justify-center mt-8">
+        <button type="button" onclick="enterApp()" class="cover-start-button">시작하기</button>
+      </div>
     </div>
   </section>
   <audio id="cover-music" src="background-music.mp3" preload="none" loop></audio>
