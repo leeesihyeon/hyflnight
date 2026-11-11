@@ -36,9 +36,18 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <style>
-    #home-screen { background: linear-gradient(180deg, rgba(30,27,75,.16), rgba(30,27,75,.04)), url('home-cover.webp.png') center / cover no-repeat, url('assets/pixel-safe-night-background.svg') center / cover no-repeat; }
-    #home-screen::before { content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(39,31,87,.25),rgba(39,31,87,.04) 55%,rgba(25,35,50,.22)); pointer-events:none; }
+    #home-screen { background:linear-gradient(180deg,rgba(30,27,75,.12),rgba(30,27,75,.16)),url('home-cover.webp.png') center top / cover fixed no-repeat,url('assets/pixel-safe-night-background.svg') center / cover no-repeat; overflow-y:auto; overscroll-behavior:contain; display:flex; flex-direction:column; justify-content:flex-start; }
+    #home-screen::before { content:''; position:fixed; inset:0; background:linear-gradient(180deg,rgba(39,31,87,.12),rgba(39,31,87,.06) 42%,rgba(25,35,50,.36)); pointer-events:none; }
     #home-screen > div { position:relative; z-index:1; text-shadow:0 2px 10px rgba(25,25,55,.28); }
+    .cover-hero { min-height:100svh; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:3rem 1.25rem; }
+    .cover-rise { animation:coverRise .9s cubic-bezier(.2,.75,.25,1) both; }
+    @keyframes coverRise { from {opacity:0;transform:translateY(42px)} to {opacity:1;transform:translateY(0)} }
+    .cover-reveal { opacity:0; transform:translateY(44px); transition:opacity .75s ease,transform .75s cubic-bezier(.2,.75,.25,1); }
+    .cover-reveal.is-visible { opacity:1; transform:translateY(0); }
+    .cover-stat-panel { background:rgba(20,24,52,.76); border:1px solid rgba(255,255,255,.28); backdrop-filter:blur(14px); box-shadow:0 20px 60px rgba(15,23,42,.24); }
+    .cover-bar-track { height:10px; border-radius:999px; background:rgba(255,255,255,.18); overflow:hidden; }
+    .cover-bar-fill { height:100%; border-radius:999px; }
+    @media (prefers-reduced-motion:reduce) { .cover-rise,.cover-reveal {animation:none;transition:none;opacity:1;transform:none} }
     #kakao-map {
       width: 100%;
       height: 100%;
@@ -335,19 +344,70 @@
 
   </div>
 
-  <section id="home-screen" class="fixed inset-0 z-[60] flex items-center justify-center text-white p-6">
-    <div class="max-w-xl w-full text-center space-y-5">
-      <div class="mx-auto w-20 h-20 rounded-3xl bg-blue-600 flex items-center justify-center"><i data-lucide="shield-check" class="w-11 h-11"></i></div>
-      <p class="text-blue-100 text-sm font-semibold tracking-widest">SAFE NIGHT ROUTE</p>
-      <h1 class="text-3xl md:text-5xl font-extrabold">안전한 귀가의 시작</h1>
-      <p class="text-white/90">가로등과 CCTV 위치 데이터를 바탕으로 목적지 주변과 이동 경로를 확인하세요.</p>
-      <button onclick="enterApp()" class="w-full sm:w-auto px-10 py-4 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg">안전 지도 시작하기 <span aria-hidden="true">→</span></button>
-      <div class="pt-1 flex flex-col items-center gap-2">
-        <button id="cover-music-button" type="button" onclick="toggleCoverMusic()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/70 bg-slate-950/30 hover:bg-slate-950/50 text-sm font-semibold">
-          <span id="cover-music-icon" aria-hidden="true">▶</span><span id="cover-music-label">배경음악 재생</span>
-        </button>
-        <p id="cover-music-status" class="text-xs text-white/80" aria-live="polite">원할 때 버튼을 눌러 배경음악을 재생하세요.</p>
+  <section id="home-screen" class="fixed inset-0 z-[60] text-white">
+    <div class="cover-hero w-full text-center">
+      <div class="max-w-2xl w-full space-y-5 cover-rise">
+        <div class="mx-auto w-20 h-20 rounded-3xl bg-blue-600 flex items-center justify-center shadow-xl"><i data-lucide="shield-check" class="w-11 h-11"></i></div>
+        <p class="text-blue-100 text-sm font-semibold tracking-widest">SAFE NIGHT ROUTE</p>
+        <h1 class="text-3xl md:text-5xl font-extrabold">안전한 귀가의 시작</h1>
+        <p class="text-white/95 text-sm md:text-base">가로등과 CCTV 위치 데이터로 목적지 주변과 이동 경로를 확인하세요.</p>
+        <button onclick="enterApp()" class="w-full sm:w-auto px-10 py-4 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg transition hover:-translate-y-0.5">안전 지도 시작하기 <span aria-hidden="true">→</span></button>
+        <div class="pt-1 flex flex-col items-center gap-2">
+          <button id="cover-music-button" type="button" onclick="toggleCoverMusic()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/70 bg-slate-950/30 hover:bg-slate-950/50 text-sm font-semibold">
+            <span id="cover-music-icon" aria-hidden="true">▶</span><span id="cover-music-label">배경음악 재생</span>
+          </button>
+          <p id="cover-music-status" class="text-xs text-white/80" aria-live="polite">원할 때 버튼을 눌러 배경음악을 재생하세요.</p>
+        </div>
+        <div class="pt-5 text-xs text-white/90 animate-bounce">아래로 스크롤해 범죄 통계 확인하기 ↓</div>
       </div>
+    </div>
+
+    <div class="w-full max-w-5xl mx-auto px-4 pb-16 md:pb-20">
+      <section class="cover-stat-panel rounded-3xl p-5 md:p-8 cover-reveal">
+        <div class="text-center mb-7">
+          <p class="text-xs md:text-sm font-bold tracking-[.22em] text-amber-200">2024 CRIME STATISTICS</p>
+          <h2 class="text-2xl md:text-3xl font-extrabold mt-2">밤길 안전, 통계로 확인하기</h2>
+          <p class="text-sm text-white/80 mt-2">범죄가 많이 발생한 시간대와 장소를 비교했습니다.</p>
+        </div>
+        <div class="grid md:grid-cols-2 gap-5">
+          <article class="rounded-2xl bg-white/10 p-4 md:p-5">
+            <div class="flex items-center justify-between gap-3 mb-4">
+              <div><p class="text-xs text-amber-200 font-bold">시간대별 범죄 발생</p><h3 class="text-lg font-extrabold mt-1">시간대 순위</h3></div>
+              <div class="text-right"><strong class="text-3xl text-amber-200">1위</strong><p class="text-xs text-white/75">21~23시</p></div>
+            </div>
+            <div class="space-y-4 text-sm">
+              <div><div class="flex justify-between mb-1"><span class="font-bold text-amber-100">1위 · 21:00~23:59</span><strong>107,733건</strong></div><div class="cover-bar-track"><div class="cover-bar-fill bg-amber-300" style="width:100%"></div></div></div>
+              <div><div class="flex justify-between mb-1"><span>2위 · 18:00~20:59</span><strong>89,810건</strong></div><div class="cover-bar-track"><div class="cover-bar-fill bg-white/75" style="width:83.4%"></div></div></div>
+              <div><div class="flex justify-between mb-1"><span>3위 · 15:00~17:59</span><strong>83,102건</strong></div><div class="cover-bar-track"><div class="cover-bar-fill bg-white/65" style="width:77.1%"></div></div></div>
+              <div class="pt-2 border-t border-white/20"><div class="flex justify-between mb-1"><span class="text-white/85">6위 · 00:00~02:59</span><strong>47,554건</strong></div><div class="cover-bar-track"><div class="cover-bar-fill bg-sky-300" style="width:44.2%"></div></div></div>
+            </div>
+            <p class="text-xs leading-relaxed text-white/70 mt-4">※ 통계는 3시간 단위입니다. 22:00~01:00만의 별도 순위는 산출할 수 없어 인접한 시간 구간의 순위를 표시했습니다.</p>
+          </article>
+          <article class="rounded-2xl bg-white/10 p-4 md:p-5">
+            <div class="flex items-center justify-between gap-3 mb-4">
+              <div><p class="text-xs text-sky-200 font-bold">발생 장소별 범죄</p><h3 class="text-lg font-extrabold mt-1">거리 범죄 순위</h3></div>
+              <div class="text-right"><strong class="text-3xl text-sky-200">2위</strong><p class="text-xs text-white/75">노상</p></div>
+            </div>
+            <div class="space-y-4 text-sm">
+              <div><div class="flex justify-between mb-1"><span>1위 · 기타</span><strong>154,956건</strong></div><div class="cover-bar-track"><div class="cover-bar-fill bg-white/75" style="width:100%"></div></div></div>
+              <div><div class="flex justify-between mb-1"><span class="font-bold text-sky-100">2위 · 노상(거리·도로)</span><strong>114,939건</strong></div><div class="cover-bar-track"><div class="cover-bar-fill bg-sky-300" style="width:74.2%"></div></div></div>
+              <div><div class="flex justify-between mb-1"><span>3위 · 아파트·연립·다세대</span><strong>66,170건</strong></div><div class="cover-bar-track"><div class="cover-bar-fill bg-white/65" style="width:42.7%"></div></div></div>
+              <div><div class="flex justify-between mb-1"><span>4위 · 상점</span><strong>53,740건</strong></div><div class="cover-bar-track"><div class="cover-bar-fill bg-white/55" style="width:34.7%"></div></div></div>
+            </div>
+            <p class="text-xs leading-relaxed text-white/70 mt-4">※ '노상'은 거리·도로 등 통계 분류이며, 인도만을 따로 집계한 수치는 아닙니다. '기타'를 포함한 전체 장소 중 2위입니다.</p>
+          </article>
+        </div>
+        <div class="mt-6 rounded-2xl border border-white/20 bg-slate-950/25 p-4">
+          <p class="font-bold text-sm text-amber-100">통계 해석 안내</p>
+          <p class="text-xs md:text-sm text-white/80 leading-relaxed mt-2">시간대별 통계(총 664,914건)와 장소별 통계(총 513,205건)는 집계 항목과 기준이 서로 다르므로 두 총계를 직접 비교하지 않았습니다. 이 자료는 2024년 전국 집계이며 특정 지역의 현재 위험도를 뜻하지 않습니다.</p>
+          <p class="text-xs text-white/65 mt-3">출처: KOSIS 국가통계포털 · 범죄발생 시간 / 범죄발생 장소 · 2024년</p>
+          <div class="flex flex-wrap gap-4 mt-2 text-xs">
+            <a class="underline text-sky-200 hover:text-white" href="https://kosis.kr/statHtml/statHtml.do?orgId=135&tblId=TX_13501_A037A" target="_blank" rel="noopener">시간 통계 원문</a>
+            <a class="underline text-sky-200 hover:text-white" href="https://kosis.kr/statHtml/statHtml.do?orgId=135&tblId=TX_13501_A052" target="_blank" rel="noopener">장소 통계 원문</a>
+          </div>
+        </div>
+      </section>
+      <p class="cover-reveal text-center text-xs text-white/85 mt-5">SAFE NIGHT ROUTE · 안전한 귀가를 위한 위치 정보</p>
     </div>
   </section>
   <audio id="cover-music" src="background-music.mp3" preload="none" loop></audio>
@@ -376,6 +436,25 @@
 
   <!-- JavaScript Logic -->
   <script>
+    // 통계 패널은 표지 안에서 스크롤해 화면에 들어오면 아래에서 위로 나타난다.
+    function initCoverScrollReveal() {
+      const items = document.querySelectorAll('#home-screen .cover-reveal');
+      if (!('IntersectionObserver' in window)) {
+        items.forEach(item => item.classList.add('is-visible'));
+        return;
+      }
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { root: document.getElementById('home-screen'), threshold: 0.12 });
+      items.forEach(item => observer.observe(item));
+    }
+    document.addEventListener('DOMContentLoaded', initCoverScrollReveal);
+
     // 표지 배경음악은 브라우저 자동재생 정책에 맞춰 사용자 버튼을 눌렀을 때 시작한다.
     async function toggleCoverMusic() {
       const audio = document.getElementById('cover-music');
