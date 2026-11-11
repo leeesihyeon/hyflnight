@@ -966,6 +966,20 @@
         row.append(open, del); el.append(row);
       });
     }
+    // 입력창에서 Enter 키를 누르면 해당 검색을 실행한다.
+    document.getElementById('route-end').addEventListener('keydown', function(event) {
+      if (event.key === 'Enter' && !event.isComposing) {
+        event.preventDefault();
+        calculateRoute();
+      }
+    });
+    document.getElementById('search-input').addEventListener('keydown', function(event) {
+      if (event.key === 'Enter' && !event.isComposing) {
+        event.preventDefault();
+        searchLocation();
+      }
+    });
+
     function enterApp() {
       const homeScreen = document.getElementById('home-screen');
       const appHeader = document.getElementById('app-header');
