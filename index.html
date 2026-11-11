@@ -36,6 +36,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <style>
+    #home-screen.hidden { display:none !important; }
     #home-screen { background:linear-gradient(180deg,rgba(30,27,75,.12),rgba(30,27,75,.16)),url('home-cover.webp.png') center top / cover fixed no-repeat,url('assets/pixel-safe-night-background.svg') center / cover no-repeat; overflow-y:auto; overscroll-behavior:contain; display:flex; flex-direction:column; justify-content:flex-start; }
     #home-screen::before { content:''; position:fixed; inset:0; background:linear-gradient(180deg,rgba(39,31,87,.12),rgba(39,31,87,.06) 42%,rgba(25,35,50,.36)); pointer-events:none; }
     #home-screen > div { position:relative; z-index:1; text-shadow:0 2px 10px rgba(25,25,55,.28); }
@@ -992,15 +993,25 @@
       });
     }
     function enterApp() {
-      document.getElementById('home-screen').classList.add('hidden');
-      document.getElementById('app-header').style.display = 'flex';
-      document.getElementById('app-main').style.display = 'flex';
-      if (kakaoMapObj) {
-        // 표지에서 메인으로 진입하면 한영외고를 중심으로 지도 위치와 확대 수준을 고정한다.
-        kakaoMapObj.relayout();
-        kakaoMapObj.setCenter(new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]));
-        kakaoMapObj.setLevel(5);
-      }
+      const homeScreen = document.getElementById('home-screen');
+      const appHeader = document.getElementById('app-header');
+      const appMain = document.getElementById('app-main');
+
+      // 표지에는 #home-screen의 display:flex ID 규칙이 있으므로
+      // hidden 클래스와 인라인 display:none을 함께 적용해 확실히 숨긴다.
+      homeScreen.classList.add('hidden');
+      homeScreen.style.display = 'none';
+      appHeader.style.display = 'flex';
+      appMain.style.display = 'flex';
+
+      // 메인 화면이 실제로 표시된 다음 지도 크기를 다시 계산한다.
+      requestAnimationFrame(() => {
+        if (kakaoMapObj && window.kakao && kakao.maps) {
+          kakaoMapObj.relayout();
+          kakaoMapObj.setCenter(new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]));
+          kakaoMapObj.setLevel(5);
+        }
+      });
     }
     function toggleDrawer(open) {
       document.getElementById('menu-drawer').classList.toggle('hidden', !open);
