@@ -593,6 +593,8 @@
 
     // 카카오 지도 SDK 동적 로드 및 초기화
     function initKakaoMapSDK() {
+      if (kakaoMapSDKStarted) return;
+      kakaoMapSDKStarted = true;
       if (!/^https?:$/.test(location.protocol)) {
         setKakaoStatus('웹 서버(HTTPS) 환경에서 실행해야 합니다.');
         return;
@@ -654,8 +656,8 @@
       document.head.append(sdk);
     }
 
-    // SDK 로드 호출
-    initKakaoMapSDK();
+    // 지도 SDK는 시작하기를 눌러 메인 화면이 먼저 표시된 뒤 비동기로 불러온다.
+    let kakaoMapSDKStarted = false;
 
     // 탭 전환
     function switchTab(tabName) {
@@ -992,12 +994,16 @@
       appHeader.style.display = 'flex';
       appMain.style.display = 'flex';
 
-      // 메인 화면이 실제로 표시된 다음 지도 크기를 다시 계산한다.
+      // 먼저 메인 화면을 그린 뒤 다음 프레임에서 지도 SDK를 시작해
+      // 무거운 지도/시설 데이터 로딩이 화면 전환을 막지 않게 한다.
+      setKakaoStatus('메인 화면 표시 완료 · 지도를 불러오는 중...');
       requestAnimationFrame(() => {
         if (kakaoMapObj && window.kakao && kakao.maps) {
           kakaoMapObj.relayout();
           kakaoMapObj.setCenter(new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]));
           kakaoMapObj.setLevel(5);
+        } else {
+          setTimeout(initKakaoMapSDK, 0);
         }
       });
     }
