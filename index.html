@@ -42,8 +42,15 @@
     #home-screen > div { position:relative; z-index:1; text-shadow:0 2px 10px rgba(25,25,55,.28); }
     .cover-hero { min-height:100svh; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:3rem 1.25rem; }
     .cover-rise { animation:coverRise .9s cubic-bezier(.2,.75,.25,1) both; }
-    .cover-credits { position:absolute; top:11%; left:0; z-index:2; width:max-content; max-width:none; white-space:nowrap; color:#fff; font-size:.8rem; line-height:1.4; font-weight:600; letter-spacing:.04em; text-shadow:0 2px 8px rgba(0,0,0,.55); pointer-events:none; opacity:0; animation:coverCreditsPass 3s linear 1s infinite; }
-    @keyframes coverCreditsPass { 0% { opacity:1; transform:translateX(-100%); } 96% { opacity:1; } 100% { opacity:0; transform:translateX(calc(100vw + 100%)); } }
+    .cover-credits { position:fixed; top:18px; left:22px; z-index:80; width:max-content; max-width:calc(100vw - 100px); white-space:nowrap; color:#fff; font-size:.82rem; line-height:1.4; font-weight:700; letter-spacing:.04em; text-shadow:0 2px 8px rgba(0,0,0,.7); pointer-events:none; }
+    .cover-question-section { min-height:105svh; padding:clamp(10rem,25vh,18rem) 1.25rem 8rem; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:2.5rem; }
+    .cover-question { color:rgba(255,255,255,.88); font-size:clamp(1.5rem,4vw,2.8rem); line-height:1.5; font-weight:800; text-align:center; text-shadow:0 3px 16px rgba(0,0,0,.7); }
+    .cover-question strong { display:block; margin-top:.35rem; font-size:clamp(2.6rem,7vw,5rem); line-height:1.2; }
+    .cover-question-image { width:min(100%,740px); border-radius:1.5rem; border:1px solid rgba(255,255,255,.35); box-shadow:0 24px 70px rgba(0,0,0,.38); }
+    .cover-closing { min-height:72svh; padding:8rem 1.25rem 10rem; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:1.5rem; text-align:center; }
+    .cover-closing h2 { font-size:clamp(1.8rem,5vw,3.5rem); line-height:1.35; font-weight:900; color:#fff; text-shadow:0 3px 18px rgba(0,0,0,.65); }
+    .cover-closing .cover-brand { font-size:clamp(2.8rem,8vw,5.5rem); line-height:1; font-weight:1000; letter-spacing:-.06em; color:#fff; text-shadow:0 4px 22px rgba(0,0,0,.65); }
+    @media (max-width:640px) { .cover-credits { top:14px; left:14px; font-size:.72rem; } .cover-question-section { padding-top:12rem; } }
     @keyframes coverRise { from {opacity:0;transform:translateY(42px)} to {opacity:1;transform:translateY(0)} }
     .cover-scroll-cue { opacity:0; animation:coverArrowFade .8s ease 1s forwards; }
     @keyframes coverArrowFade { from {opacity:0;transform:translateY(-8px)} to {opacity:.9;transform:translateY(0)} }
@@ -348,10 +355,16 @@
           <a class="underline text-sky-200 hover:text-white" href="https://kosis.kr/statHtml/statHtml.do?orgId=135&tblId=TX_13501_A052" target="_blank" rel="noopener">장소 통계</a>
         </div>
       </section>
-      <div class="flex justify-center mt-8">
-        <button type="button" onclick="enterApp()" class="cover-start-button">시작하기</button>
-      </div>
     </div>
+    <section class="cover-question-section cover-reveal">
+      <p class="cover-question">야자 끝나고 집에 갈 때 무서운데...<strong>어떡하지?</strong></p>
+      <img class="cover-question-image" src="assets/cover-question.webp" alt="수영장에서 노를 잡고 있는 사람과 이미 잔뜩 겁먹은 표정이라는 문구가 담긴 사진" loading="lazy">
+    </section>
+    <section class="cover-closing cover-reveal">
+      <h2>한영외고 안전한 귀갓길의 시작</h2>
+      <p class="cover-brand">집가장</p>
+      <button type="button" onclick="enterApp()" class="cover-start-button">시작하기</button>
+    </section>
   </section>
   <audio id="cover-music" src="background-music.mp3" preload="none" loop></audio>
   <aside id="menu-drawer" class="fixed inset-0 z-[55] hidden"><div class="absolute inset-0 bg-slate-950/50" onclick="toggleDrawer(false)"></div><div class="absolute right-0 top-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl p-5 flex flex-col gap-4"><div class="flex justify-between items-center"><h2 class="font-bold text-lg">메뉴</h2><button onclick="toggleDrawer(false)" class="p-2 rounded-lg hover:bg-slate-100" aria-label="닫기">✕</button></div><button onclick="showProfile()" class="text-left p-3 rounded-xl bg-slate-50 hover:bg-blue-50"><span class="font-semibold">나</span><span class="block text-xs text-slate-500 mt-1">내 이용 정보</span></button><section class="flex-1 min-h-0"><h3 class="font-bold mb-2">즐겨찾기</h3><div id="favorites-list" class="space-y-2 overflow-y-auto max-h-[70vh] text-sm text-slate-600">저장된 즐겨찾기가 없습니다.</div></section><p id="profile-info" class="text-xs text-slate-400">즐겨찾기는 이 브라우저에 저장됩니다.</p></div></aside>
