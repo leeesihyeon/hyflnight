@@ -636,11 +636,13 @@
       kakaoMapSDKStarted = true;
       if (!/^https?:$/.test(location.protocol)) {
         setKakaoStatus('웹 서버(HTTPS) 환경에서 실행해야 합니다.');
+        mapPreloadReady = true;
         return;
       }
 
       if (!javascriptKey || javascriptKey === 'YOUR_JAVASCRIPT_KEY') {
         setKakaoStatus('JavaScript 인증키가 설정되지 않았습니다.');
+        mapPreloadReady = true;
         return;
       }
 
@@ -656,6 +658,7 @@
       sdk.onload = function() {
         if (!window.kakao || !window.kakao.maps || typeof window.kakao.maps.load !== 'function') {
           setKakaoStatus('카카오 로더 초기화 실패');
+          mapPreloadReady = true;
           return;
         }
         
@@ -1031,7 +1034,7 @@
       const loading = document.getElementById('cover-loading-message');
       const startButton = document.querySelector('.cover-start-button');
       if (!mapPreloadReady) {
-        if (loading) loading.textContent = '로딩 중... 지도와 가로등, CCTV를 불러오고 있어요.';
+        if (loading) loading.textContent = '로딩중...';
         if (startButton) startButton.disabled = true;
         const waitForMap = setInterval(() => {
           if (!mapPreloadReady) return;
