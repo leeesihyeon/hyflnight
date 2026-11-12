@@ -365,6 +365,7 @@
       <h2>한영외고 안전한 귀갓길의 시작</h2>
       <p class="cover-brand">집가장</p>
       <button type="button" onclick="enterApp()" class="cover-start-button">시작하기</button>
+      <p id="cover-loading-message" class="mt-4 min-h-6 text-sm font-semibold text-white/90" role="status" aria-live="polite"></p>
     </section>
   </section>
   <audio id="cover-music" src="background-music.mp3" preload="none" loop></audio>
@@ -400,9 +401,10 @@
         <p class="mt-2 text-sm text-slate-500">처음 이용할 때 필요한 기능을 간단히 안내할게요.</p>
       </div>
       <ol class="space-y-3 text-sm text-slate-700">
-        <li class="flex gap-3 rounded-2xl bg-blue-50 p-3"><span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 font-bold text-white">1</span><span><b>귀가 경로</b><br>목적지 주소나 장소명을 입력하고 검색해요.</span></li>
-        <li class="flex gap-3 rounded-2xl bg-emerald-50 p-3"><span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 font-bold text-white">2</span><span><b>안전 정보 확인</b><br>경로 주변의 가로등과 CCTV 위치를 확인해요.</span></li>
-        <li class="flex gap-3 rounded-2xl bg-amber-50 p-3"><span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500 font-bold text-white">3</span><span><b>위치 탐색</b><br>두 번째 탭에서 주변 장소를 검색할 수 있어요.</span></li>
+        <li class="flex gap-3 rounded-2xl bg-blue-50 p-3"><span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 font-bold text-white">1</span><span><b>귀가 경로</b><br>첫 번째 탭을 누르면 목적지 주소나 장소명을 입력하고 경로를 검색할 수 있어요.</span></li>
+        <li class="flex gap-3 rounded-2xl bg-emerald-50 p-3"><span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 font-bold text-white">2</span><span><b>위치 탐색</b><br>두 번째 탭을 누르면 주변 장소를 검색할 수 있어요.</span></li>
+        <li class="flex gap-3 rounded-2xl bg-amber-50 p-3"><span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500 font-bold text-white">3</span><span><b>지도에서 안전시설 확인</b><br>지도에서 가로등과 CCTV 위치를 확인할 수 있어요.</span></li>
+        <li class="flex gap-3 rounded-2xl bg-violet-50 p-3"><span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-600 font-bold text-white">4</span><span><b>즐겨찾기</b><br>즐겨찾기를 눌러 자주 가는 장소를 등록할 수 있어요.</span></li>
       </ol>
       <button type="button" onclick="closeAppTutorial()" class="w-full rounded-xl bg-blue-700 py-3 font-bold text-white shadow-lg hover:bg-blue-800">확인하고 시작하기</button>
     </div>
@@ -648,6 +650,7 @@
       sdk.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + encodeURIComponent(javascriptKey.trim()) + '&autoload=false&libraries=services,clusterer';
       
       sdk.onerror = function() {
+        mapPreloadReady = true;
         setKakaoStatus('카카오맵 SDK 로드 실패! Web 플랫폼 도메인 등록을 확인하세요.');
       };
 
@@ -674,18 +677,22 @@
               await loadBundledFacilityData();
               const counts = showAllSeoulFacilities();
               setKakaoStatus('서울시 기본 데이터 자동 반영 · 가로등 ' + counts.visibleLamp + '개 / CCTV ' + counts.visibleCCTV + '개 위치');
+              mapPreloadReady = true;
             } catch (dataError) {
               console.warn('저장소 CSV 자동 로드 실패:', dataError);
               if (lampData.length || cctvData.length) {
                 const counts = showAllSeoulFacilities();
                 setKakaoStatus('브라우저 저장 데이터 표시 · 가로등 ' + counts.visibleLamp + '개 / CCTV ' + counts.visibleCCTV + '개 위치');
+                mapPreloadReady = true;
               } else {
                 kakaoMapObj.setCenter(new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]));
                 kakaoMapObj.setLevel(7);
                 setKakaoStatus('기본 CSV 파일을 불러오지 못했습니다. data 폴더 파일 경로를 확인해 주세요.');
+                mapPreloadReady = true;
               }
             }
           } catch(e) {
+            mapPreloadReady = true;
             setKakaoStatus('카카오 지도 초기화 중 오류가 발생했습니다.');
           }
         });
@@ -696,6 +703,7 @@
 
     // 지도 SDK는 웹사이트 접속 직후 미리 불러온다.
     let kakaoMapSDKStarted = false;
+    let mapPreloadReady = false;
 
     // 탭 전환
     function switchTab(tabName) {
@@ -1021,27 +1029,37 @@
     });
 
     function enterApp() {
+      const loading = document.getElementById('cover-loading-message');
+      const startButton = document.querySelector('.cover-start-button');
+      if (!mapPreloadReady) {
+        if (loading) loading.textContent = '로딩 중... 지도와 가로등, CCTV를 불러오고 있어요.';
+        if (startButton) startButton.disabled = true;
+        const waitForMap = setInterval(() => {
+          if (!mapPreloadReady) return;
+          clearInterval(waitForMap);
+          if (startButton) startButton.disabled = false;
+          if (loading) loading.textContent = '';
+          finishEnteringApp();
+        }, 200);
+        return;
+      }
+      finishEnteringApp();
+    }
+
+    function finishEnteringApp() {
       const homeScreen = document.getElementById('home-screen');
       const appHeader = document.getElementById('app-header');
       const appMain = document.getElementById('app-main');
-
-      // 표지에는 #home-screen의 display:flex ID 규칙이 있으므로
-      // hidden 클래스와 인라인 display:none을 함께 적용해 확실히 숨긴다.
       homeScreen.classList.add('hidden');
       homeScreen.style.display = 'none';
       appHeader.style.display = 'flex';
       appMain.style.display = 'flex';
-
-      // 지도 SDK와 가로등/CCTV 데이터는 접속 직후 미리 로딩한다.
-      // 화면을 표시한 다음 지도 크기만 다시 계산하고, 사용법 안내를 띄운다.
       setKakaoStatus('미리 불러온 지도와 시설 정보를 준비하고 있습니다...');
       requestAnimationFrame(() => {
         if (kakaoMapObj && window.kakao && kakao.maps) {
           kakaoMapObj.relayout();
           kakaoMapObj.setCenter(new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]));
           kakaoMapObj.setLevel(5);
-        } else {
-          initKakaoMapSDK();
         }
         showAppTutorial();
       });
