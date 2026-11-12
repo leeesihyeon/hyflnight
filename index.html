@@ -43,15 +43,16 @@
     .cover-hero { min-height:100svh; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:3rem 1.25rem; }
     .cover-rise { animation:coverRise .9s cubic-bezier(.2,.75,.25,1) both; }
     .cover-credits { position:fixed; top:18px; left:22px; z-index:80; width:max-content; max-width:calc(100vw - 100px); white-space:nowrap; color:#fff; font-size:.82rem; line-height:1.4; font-weight:700; letter-spacing:.04em; text-shadow:0 2px 8px rgba(0,0,0,.7); pointer-events:none; }
-    .cover-question-section { min-height:105svh; padding:clamp(10rem,25vh,18rem) 1.25rem 8rem; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:2.5rem; }
-    .cover-question { color:rgba(255,255,255,.88); font-size:clamp(1.5rem,4vw,2.8rem); line-height:1.5; font-weight:800; text-align:center; text-shadow:0 3px 16px rgba(0,0,0,.7); }
+    .cover-question-section { position:relative; z-index:1; min-height:auto; padding:clamp(9rem,20vh,14rem) 1.25rem 5rem; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:2rem; }
+    .cover-question { color:rgba(255,255,255,.88); font-size:clamp(1.5rem,4vw,2.8rem); line-height:1.5; font-weight:800; text-align:center; text-shadow:0 3px 16px rgba(0,0,0,.7); animation:coverQuestionTremble .14s linear infinite; transform-origin:center; }
     .cover-question strong { display:block; margin-top:.35rem; font-size:clamp(2.6rem,7vw,5rem); line-height:1.2; }
-    .cover-question-image { width:min(100%,740px); border-radius:1.5rem; border:1px solid rgba(255,255,255,.35); box-shadow:0 24px 70px rgba(0,0,0,.38); }
-    .cover-closing { min-height:72svh; padding:8rem 1.25rem 10rem; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:1.5rem; text-align:center; }
+    .cover-question-image { display:block; width:min(82%,480px); height:auto; margin:0 auto; border-radius:1.5rem; border:1px solid rgba(255,255,255,.35); box-shadow:0 24px 70px rgba(0,0,0,.38); }
+    .cover-closing { position:relative; z-index:1; clear:both; min-height:72svh; margin-top:3rem; padding:7rem 1.25rem 10rem; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:1.5rem; text-align:center; }
     .cover-closing h2 { font-size:clamp(1.8rem,5vw,3.5rem); line-height:1.35; font-weight:900; color:#fff; text-shadow:0 3px 18px rgba(0,0,0,.65); }
     .cover-closing .cover-brand { font-size:clamp(2.8rem,8vw,5.5rem); line-height:1; font-weight:1000; letter-spacing:-.06em; color:#fff; text-shadow:0 4px 22px rgba(0,0,0,.65); }
     @media (max-width:640px) { .cover-credits { top:14px; left:14px; font-size:.72rem; } .cover-question-section { padding-top:12rem; } }
     @keyframes coverRise { from {opacity:0;transform:translateY(42px)} to {opacity:1;transform:translateY(0)} }
+    @keyframes coverQuestionTremble { 0%,100% { transform:translate(0,0) rotate(0deg); } 25% { transform:translate(-1.5px,.8px) rotate(-.35deg); } 50% { transform:translate(1.5px,-.6px) rotate(.35deg); } 75% { transform:translate(-.8px,-1px) rotate(-.2deg); } }
     .cover-scroll-cue { opacity:0; animation:coverArrowFade .8s ease 1s forwards; }
     @keyframes coverArrowFade { from {opacity:0;transform:translateY(-8px)} to {opacity:.9;transform:translateY(0)} }
     .cover-rank { display:block; margin-top:5px; font-size:1.25rem; line-height:1.2; font-weight:900; letter-spacing:-.03em; }
