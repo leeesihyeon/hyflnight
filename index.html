@@ -56,7 +56,7 @@
     .cover-scroll-cue { opacity:0; animation:coverArrowFade .8s ease 1s forwards; }
     @keyframes coverArrowFade { from {opacity:0;transform:translateY(-8px)} to {opacity:.9;transform:translateY(0)} }
     .cover-rank { display:block; margin-top:5px; font-size:1.25rem; line-height:1.2; font-weight:900; letter-spacing:-.03em; }
-    .cover-start-button { display:inline-flex; align-items:center; justify-content:center; min-width:190px; margin-top:2.5rem; padding:14px 34px; border-radius:999px; background:#fff; color:#1e3a8a; font-size:14px; font-weight:800; box-shadow:0 12px 30px rgba(15,23,42,.25); transition:transform .2s ease,box-shadow .2s ease; }
+    .cover-start-button { display:inline-flex; align-items:center; justify-content:center; min-width:190px; margin-top:6rem; padding:14px 34px; border-radius:999px; background:#fff; color:#1e3a8a; font-size:14px; font-weight:800; box-shadow:0 12px 30px rgba(15,23,42,.25); transition:transform .2s ease,box-shadow .2s ease; }
     .cover-start-button:hover { transform:translateY(-2px); box-shadow:0 16px 36px rgba(15,23,42,.32); }
     .cover-reveal { opacity:0; transform:translateY(44px); transition:opacity .75s ease,transform .75s cubic-bezier(.2,.75,.25,1); }
     .cover-reveal.is-visible { opacity:1; transform:translateY(0); }
@@ -321,7 +321,7 @@
     </button>
     <p class="cover-credits" aria-label="제작: 김나원, 안예지, 이시현">김나원, 안예지, 이시현</p>
     <div class="cover-hero w-full text-center">
-      <h1 class="text-3xl md:text-5xl font-extrabold cover-rise">안전한 귀가의 시작</h1>
+      <h1 class="text-4xl md:text-6xl font-extrabold cover-rise">집가장</h1>
       <div class="cover-scroll-cue mt-10 flex flex-col items-center gap-2" aria-hidden="true">
         <span class="text-[10px] tracking-[0.22em] text-white/85">SCROLL</span>
         <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
@@ -391,6 +391,23 @@
     </div>
   </div>
 
+  <!-- Main screen first-entry tutorial -->
+  <div id="app-tutorial" class="fixed inset-0 z-[90] hidden items-center justify-center bg-slate-950/65 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="app-tutorial-title">
+    <div class="w-full max-w-md rounded-3xl bg-white p-6 md:p-8 shadow-2xl space-y-5">
+      <div class="text-center">
+        <p class="text-xs font-bold tracking-[.2em] text-blue-600">WELCOME TO 집가장</p>
+        <h2 id="app-tutorial-title" class="mt-2 text-2xl font-black text-slate-900">안전한 귀갓길, 이렇게 이용해요!</h2>
+        <p class="mt-2 text-sm text-slate-500">처음 이용할 때 필요한 기능을 간단히 안내할게요.</p>
+      </div>
+      <ol class="space-y-3 text-sm text-slate-700">
+        <li class="flex gap-3 rounded-2xl bg-blue-50 p-3"><span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 font-bold text-white">1</span><span><b>귀가 경로</b><br>목적지 주소나 장소명을 입력하고 검색해요.</span></li>
+        <li class="flex gap-3 rounded-2xl bg-emerald-50 p-3"><span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 font-bold text-white">2</span><span><b>안전 정보 확인</b><br>경로 주변의 가로등과 CCTV 위치를 확인해요.</span></li>
+        <li class="flex gap-3 rounded-2xl bg-amber-50 p-3"><span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500 font-bold text-white">3</span><span><b>위치 탐색</b><br>두 번째 탭에서 주변 장소를 검색할 수 있어요.</span></li>
+      </ol>
+      <button type="button" onclick="closeAppTutorial()" class="w-full rounded-xl bg-blue-700 py-3 font-bold text-white shadow-lg hover:bg-blue-800">확인하고 시작하기</button>
+    </div>
+  </div>
+
   <!-- JavaScript Logic -->
   <script>
     // 통계 패널은 표지 안에서 스크롤해 화면에 들어오면 아래에서 위로 나타난다.
@@ -410,7 +427,11 @@
       }, { root: document.getElementById('home-screen'), threshold: 0.12 });
       items.forEach(item => observer.observe(item));
     }
-    document.addEventListener('DOMContentLoaded', initCoverScrollReveal);
+    document.addEventListener('DOMContentLoaded', () => {
+      initCoverScrollReveal();
+      // 사용자가 시작하기를 누르기 전부터 지도 SDK와 시설 데이터를 미리 불러온다.
+      initKakaoMapSDK();
+    });
 
     // 표지 배경음악은 브라우저 자동재생 정책에 맞춰 사용자 버튼을 눌렀을 때 시작한다.
     async function toggleCoverMusic() {
@@ -673,7 +694,7 @@
       document.head.append(sdk);
     }
 
-    // 지도 SDK는 시작하기를 눌러 메인 화면이 먼저 표시된 뒤 비동기로 불러온다.
+    // 지도 SDK는 웹사이트 접속 직후 미리 불러온다.
     let kakaoMapSDKStarted = false;
 
     // 탭 전환
@@ -1011,19 +1032,33 @@
       appHeader.style.display = 'flex';
       appMain.style.display = 'flex';
 
-      // 먼저 메인 화면을 그린 뒤 다음 프레임에서 지도 SDK를 시작해
-      // 무거운 지도/시설 데이터 로딩이 화면 전환을 막지 않게 한다.
-      setKakaoStatus('메인 화면 표시 완료 · 지도를 불러오는 중...');
+      // 지도 SDK와 가로등/CCTV 데이터는 접속 직후 미리 로딩한다.
+      // 화면을 표시한 다음 지도 크기만 다시 계산하고, 사용법 안내를 띄운다.
+      setKakaoStatus('미리 불러온 지도와 시설 정보를 준비하고 있습니다...');
       requestAnimationFrame(() => {
         if (kakaoMapObj && window.kakao && kakao.maps) {
           kakaoMapObj.relayout();
           kakaoMapObj.setCenter(new kakao.maps.LatLng(HANYOUNG_COORDS[0], HANYOUNG_COORDS[1]));
           kakaoMapObj.setLevel(5);
         } else {
-          setTimeout(initKakaoMapSDK, 0);
+          initKakaoMapSDK();
         }
+        showAppTutorial();
       });
     }
+    function showAppTutorial() {
+      const tutorial = document.getElementById('app-tutorial');
+      if (!tutorial) return;
+      tutorial.classList.remove('hidden');
+      tutorial.classList.add('flex');
+    }
+    function closeAppTutorial() {
+      const tutorial = document.getElementById('app-tutorial');
+      if (!tutorial) return;
+      tutorial.classList.add('hidden');
+      tutorial.classList.remove('flex');
+    }
+
     function toggleDrawer(open) {
       document.getElementById('menu-drawer').classList.toggle('hidden', !open);
       if (open) renderFavorites();
