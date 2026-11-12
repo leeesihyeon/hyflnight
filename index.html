@@ -44,11 +44,11 @@
     .cover-rise { animation:coverRise .9s cubic-bezier(.2,.75,.25,1) both; }
     .cover-credits { position:fixed; top:18px; left:22px; z-index:80; width:max-content; max-width:calc(100vw - 100px); white-space:nowrap; color:#fff; font-size:.82rem; line-height:1.4; font-weight:700; letter-spacing:.04em; text-shadow:0 2px 8px rgba(0,0,0,.7); pointer-events:none; }
     .cover-question-section { position:relative; z-index:1; min-height:auto; padding:clamp(9rem,20vh,14rem) 1.25rem 5rem; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:2rem; }
-    .cover-question { color:rgba(255,255,255,.88); font-size:clamp(1.5rem,4vw,2.8rem); line-height:1.5; font-weight:800; text-align:center; text-shadow:0 3px 16px rgba(0,0,0,.7); animation:coverQuestionTremble .14s linear infinite; transform-origin:center; }
+    .cover-question { color:rgba(255,255,255,.88); font-size:clamp(1.875rem,4vw,3rem); line-height:1.5; font-weight:800; text-align:center; text-shadow:0 3px 16px rgba(0,0,0,.7); animation:coverQuestionTremble .14s linear infinite; transform-origin:center; }
     .cover-question strong { display:block; margin-top:.35rem; font-size:clamp(2.6rem,7vw,5rem); line-height:1.2; }
     .cover-question-image { display:block; width:min(82%,480px); height:auto; margin:0 auto; border-radius:1.5rem; border:1px solid rgba(255,255,255,.35); box-shadow:0 24px 70px rgba(0,0,0,.38); }
     .cover-closing { position:relative; z-index:1; clear:both; min-height:72svh; margin-top:3rem; padding:7rem 1.25rem 10rem; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:1.5rem; text-align:center; }
-    .cover-closing h2 { font-size:clamp(1.8rem,5vw,3.5rem); line-height:1.35; font-weight:900; color:#fff; text-shadow:0 3px 18px rgba(0,0,0,.65); }
+    .cover-closing h2 { font-size:clamp(1.875rem,4vw,3rem); line-height:1.35; font-weight:900; color:#fff; text-shadow:0 3px 18px rgba(0,0,0,.65); }
     .cover-closing .cover-brand { font-size:clamp(2.8rem,8vw,5.5rem); line-height:1; font-weight:1000; letter-spacing:-.06em; color:#fff; text-shadow:0 4px 22px rgba(0,0,0,.65); }
     @media (max-width:640px) { .cover-credits { top:14px; left:14px; font-size:.72rem; } .cover-question-section { padding-top:12rem; } }
     @keyframes coverRise { from {opacity:0;transform:translateY(42px)} to {opacity:1;transform:translateY(0)} }
@@ -56,7 +56,7 @@
     .cover-scroll-cue { opacity:0; animation:coverArrowFade .8s ease 1s forwards; }
     @keyframes coverArrowFade { from {opacity:0;transform:translateY(-8px)} to {opacity:.9;transform:translateY(0)} }
     .cover-rank { display:block; margin-top:5px; font-size:1.25rem; line-height:1.2; font-weight:900; letter-spacing:-.03em; }
-    .cover-start-button { display:inline-flex; align-items:center; justify-content:center; min-width:190px; padding:14px 34px; border-radius:999px; background:#fff; color:#1e3a8a; font-size:14px; font-weight:800; box-shadow:0 12px 30px rgba(15,23,42,.25); transition:transform .2s ease,box-shadow .2s ease; }
+    .cover-start-button { display:inline-flex; align-items:center; justify-content:center; min-width:190px; margin-top:2.5rem; padding:14px 34px; border-radius:999px; background:#fff; color:#1e3a8a; font-size:14px; font-weight:800; box-shadow:0 12px 30px rgba(15,23,42,.25); transition:transform .2s ease,box-shadow .2s ease; }
     .cover-start-button:hover { transform:translateY(-2px); box-shadow:0 16px 36px rgba(15,23,42,.32); }
     .cover-reveal { opacity:0; transform:translateY(44px); transition:opacity .75s ease,transform .75s cubic-bezier(.2,.75,.25,1); }
     .cover-reveal.is-visible { opacity:1; transform:translateY(0); }
@@ -344,7 +344,7 @@
             <h3 class="flex items-center justify-center gap-3 text-lg font-extrabold text-sky-100 text-center mb-5"><span>장소별 범죄 발생</span><span class="text-3xl md:text-4xl font-black leading-none text-sky-300">2위</span></h3>
             <div class="h-64 flex items-end justify-around gap-3 border-b border-white/30 px-2">
               <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">154,956</strong><div class="w-full max-w-12 rounded-t-md bg-white/75" style="height:100%"></div><span class="text-[10px] text-center">기타<br/>1위</span></div>
-              <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">114,939</strong><div class="w-full max-w-12 rounded-t-md bg-sky-300" style="height:74.2%"></div><span class="text-sm md:text-base font-black text-center text-sky-200 leading-tight">노상<br/>(거리, 인도 등)</span></div>
+              <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">114,939</strong><div class="w-full max-w-12 rounded-t-md bg-sky-300" style="height:74.2%"></div><span class="text-[10px] md:text-xs font-black text-center text-sky-200 whitespace-nowrap">노상 (거리, 인도 등)</span></div>
               <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">66,170</strong><div class="w-full max-w-12 rounded-t-md bg-white/65" style="height:42.7%"></div><span class="text-[10px] text-center">주거<br/>3위</span></div>
               <div class="h-full flex flex-col justify-end items-center flex-1 gap-2"><strong class="text-xs">53,740</strong><div class="w-full max-w-12 rounded-t-md bg-white/55" style="height:34.7%"></div><span class="text-[10px] text-center">상점<br/>4위</span></div>
             </div>
